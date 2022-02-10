@@ -4,6 +4,7 @@ use mongodb::{Client, options::ClientOptions,Database, bson::doc};
 use warp::{http};
 use crate::mydatastruct::MyData;
 use futures_util::stream::StreamExt;
+#[derive(Clone)]
 pub struct MongoDBProvider{
     client: Client,
     database: Database
@@ -15,13 +16,13 @@ impl MongoDBProvider {
         let database=client.database("mydata");
         MongoDBProvider{client,database}
     }
-    pub async fn add_to_db(&self,data:MyData)->Result<impl warp::Reply, warp::Rejection>{
-        let collection = self.database.collection::<MyData>("dobro");
-        collection.insert_one(data, None);
+    pub async fn add_to_db(db:MongoDBProvider,data:MyData)->Result<impl warp::Reply, warp::Rejection>{
+        let collection = db.database.collection::<MyData>("dobro");
+        collection.insert_one(data, None).await.unwrap();
         Ok(warp::reply::with_status("Ok", http::StatusCode::CREATED))
     }
-    pub async fn get_by_id(&self,id:String) ->Result<impl warp::Reply, warp::Rejection>{
-        let collection=self.database.collection::<MyData>("dobro");
+    pub async fn get_by_id(db:MongoDBProvider,id:String) ->Result<impl warp::Reply, warp::Rejection>{
+        let collection=db.database.collection::<MyData>("dobro");
         let search_result=collection.find(doc!{"id":id}, None).await;
         if search_result.is_ok() {
             let mut vec_res:Vec<MyData>=Vec::new();

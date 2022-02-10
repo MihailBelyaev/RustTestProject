@@ -2,6 +2,7 @@ use serde::{Serialize,Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MyData{
+    #[serde(rename="_id")]
     id: String,
     first_name: String,
     age: i32,
