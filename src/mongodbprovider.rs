@@ -1,9 +1,16 @@
 
 
-use mongodb::{Client, options::ClientOptions,Database, bson::doc};
-use warp::{http, Rejection, Reply};
+use mongodb::{Client, options::ClientOptions,Database, bson::{doc}};
+use warp::{http};
 use crate::mydatastruct::MyData;
 use futures_util::stream::StreamExt;
+use async_trait::async_trait;
+#[async_trait]
+trait MongoDBProviderTrait {
+    pub async fn add_to_db(db:impl MongoDBProviderTrait,data:MyData)->Result<impl warp::Reply, warp::Rejection> ;
+    pub async fn get_by_id(db:impl MongoDBProviderTrait,id:String) ->Result<impl warp::Reply, warp::Rejection> ;
+}
+
 #[derive(Clone)]
 pub struct MongoDBProvider{
     client: Client,
@@ -17,24 +24,20 @@ impl MongoDBProvider {
         MongoDBProvider{client,database}
     }
 
-    pub async fn insert_struct_to_db(&self, data: MyData) -> Result<(), std::Error> {
-        todo!()
-    }
+    pub async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
+        let collection = self.database.collection::<MyData>("dobro");
+        match collection.insert_one(data, None).await {
+            Ok(result) => {
+                return futures_util::__private::Ok(());}
+            Err (err)=>{
+                return futures_util::__private::Err(err.to_string())
+            }
 
-    pub async fn read_from(&self, id: String) -> Result<MyData, std::Error> {
-        todo!()
     }
-
-    //todo: move to trait impl
-    pub async fn add_to_db(db:MongoDBProvider,data:MyData)->Result<impl warp::Reply, warp::Rejection>{
-        let collection = db.database.collection::<MyData>("dobro");
-        collection.insert_one(data, None).await.unwrap();
-        Ok(warp::reply::with_status("Ok", http::StatusCode::CREATED))
     }
-    //todo: move to trait impl
-    pub async fn get_by_id(db:MongoDBProvider,id:String) ->Result<impl warp::Reply, warp::Rejection>{
-        let collection=db.database.collection::<MyData>("dobro");
-        let search_result=collection.find(doc!{"id":id}, None).await;
+    pub async fn read_from(&self, id: String) -> Result<Vec<MyData>, String> {
+        let collection=self.database.collection::<MyData>("dobro");
+        let search_result=collection.find(doc!{"_id":id}, None).await;
         if search_result.is_ok() {
             let mut vec_res:Vec<MyData>=Vec::new();
             let mut cursor: mongodb::Cursor<MyData>=search_result.unwrap();
@@ -43,32 +46,43 @@ impl MongoDBProvider {
                     vec_res.push(dt.unwrap());
                 }
                 else{
-                    return Err(warp::reject::reject())
+                    return Err("Internal Error")
                 }
             }
-            return Ok(warp::reply::with_status(warp::reply::json(&vec_res), http::StatusCode::OK))
-
+            return Ok(vec_res)
         }
         else {
-            return Err(warp::reject::reject())
+            return Err("Search Error")
+        }
+    }
+
+}
+#[async_trait]
+impl MongoDBProviderTrait for MongoDBProvider {
+    async fn add_to_db(db: impl MongoDBProviderTrait, data: MyData) -> Result<impl warp::Reply, warp::Rejection> {
+        match db.insert_struct_to_db(data){
+            Ok(_)=>{
+                return Ok(warp::reply::with_status("Item successfully created", http::StatusCode::CREATED))
+            },
+            Err(err_str)=>{
+                return Ok(warp::reply::with_status(err_str, http::StatusCode::NOT_ACCEPTABLE))
+            }
+        }
+    }
+
+    async fn get_by_id(db: impl MongoDBProviderTrait, id: String) -> Result<impl warp::Reply, warp::Rejection> {
+        match db.read_from(id){
+            Ok(res)=>{
+                return Ok(warp::reply::with_status(res, http::StatusCode::FOUND))
+            },
+            Err(err_str)=>{
+                return Ok(warp::reply::with_status(err_str, http::StatusCode::NOT_FOUND))
+            }
         }
     }
 }
 
-impl MongoDBProviderTrait for MongoDBProvider {
-    async fn add_to_db(db: MongoDBProvider, data: MyData) -> Result<impl Reply, Rejection> {
-        todo!()
-    }
 
-    async fn get_by_id(db: MongoDBProvider, id: String) -> Result<impl Reply, Rejection> {
-        todo!()
-    }
-}
-
-trait MongoDBProviderTrait {
-    pub async fn add_to_db(db:MongoDBProvider,data:MyData)->Result<impl warp::Reply, warp::Rejection> {};
-    pub async fn get_by_id(db:MongoDBProvider,id:String) ->Result<impl warp::Reply, warp::Rejection> {};
-}
 
 #[cfg(test)]
 struct FakeMongoDbProvider{}
