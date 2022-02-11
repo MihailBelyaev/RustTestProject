@@ -62,10 +62,10 @@ impl MongoDBProviderTrait for MongoDBProvider {
   pub  async fn add_to_db(db: impl MongoDBProviderTrait, data: MyData) -> Result<impl warp::Reply, warp::Rejection> {
         match db.insert_struct_to_db(data).await{
             Ok(_)=>{
-                return Ok(warp::reply::with_status("Item successfully created", http::StatusCode::CREATED))
+                Ok(warp::reply::with_status(warp::reply::json(&"Item successfully created".to_string()), http::StatusCode::CREATED))
             },
-            Err(err_str)=>{
-                return Ok(warp::reply::with_status(& err_str.to_string(),warp::http::StatusCode::NOT_ACCEPTABLE))
+            Err(err_str )=>{
+                Ok(warp::reply::with_status(warp::reply::json(&err_str),warp::http::StatusCode::NOT_ACCEPTABLE))
             }
         }
     }
