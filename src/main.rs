@@ -1,6 +1,6 @@
 use mongodbprovider::{MongoDBProvider, MongoDBProviderTrait};
 use mydatastruct::MyData;
-use warp::Filter;
+use warp::{Filter, path::Exact,path::Opaque};
 mod mongodbprovider;
 mod mydatastruct;
 #[tokio::main]
@@ -22,6 +22,12 @@ async fn main() {
     warp::serve(data_path_routes)
         .run(([127, 0, 0, 1], 3030))
         .await;
+}
+fn insert_filter_fcn(db_provider:&impl MongoDBProviderTrait){
+    let route=warp::post()
+    .and(warp::any().map(move || db_provider.clone()))
+    .and(warp::body::json())
+    .and_then(mongodbprovider::add_to_db);
 }
 
 #[cfg(test)]

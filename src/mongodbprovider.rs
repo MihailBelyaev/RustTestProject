@@ -9,7 +9,7 @@ use mongodb::{
 use testcontainers::{clients, images, Docker};
 use warp::http;
 #[async_trait]
-pub trait MongoDBProviderTrait {
+pub trait MongoDBProviderTrait{
     async fn new(port: i32) -> Self;
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String>;
     async fn read_from(&self, id: String) -> Result<Vec<MyData>, String>;
