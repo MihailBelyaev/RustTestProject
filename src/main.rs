@@ -1,6 +1,7 @@
 use mongodbprovider::{MongoDBProvider, MongoDBProviderTrait};
 use mydatastruct::MyData;
-use warp::{Filter, path::Exact,path::Opaque};
+use serde::de::DeserializeOwned;
+use warp::{path::Exact, Filter, Rejection};
 mod mongodbprovider;
 mod mydatastruct;
 #[tokio::main]
@@ -23,12 +24,14 @@ async fn main() {
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
-fn insert_filter_fcn(db_provider:&impl MongoDBProviderTrait){
-    let route=warp::post()
-    .and(warp::any().map(move || db_provider.clone()))
-    .and(warp::body::json())
-    .and_then(mongodbprovider::add_to_db);
-}
+//async fn insert_filter_fcn(db_provider: impl MongoDBProviderTrait + Clone + Sync) {
+    //let dbProvider = Arc::new(db_provider);
+    //let data_path = warp::path("data");
+ //   warp::post()
+   //     .and(warp::any().map(move || db_provider.clone()))
+     //   .and(warp::body::json())
+       // .and_then(mongodbprovider::add_to_db)
+//}
 
 #[cfg(test)]
 mod tests {

@@ -6,11 +6,10 @@ use mongodb::{
     options::ClientOptions,
     Client, Database,
 };
-use testcontainers::{clients, images, Docker};
+use testcontainers::{clients, images, Docker, RunArgs, core::Port};
 use warp::http;
 #[async_trait]
-pub trait MongoDBProviderTrait{
-    async fn new(port: i32) -> Self;
+pub trait MongoDBProviderTrait: Send + 'static {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String>;
     async fn read_from(&self, id: String) -> Result<Vec<MyData>, String>;
 }
@@ -20,16 +19,19 @@ pub struct MongoDBProvider {
     client: Client,
     database: Database,
 }
-#[async_trait]
-impl MongoDBProviderTrait for MongoDBProvider {
-    async fn new(port: i32) -> MongoDBProvider {
-        let client_options = ClientOptions::parse(format!("mongodb://localhost:{}", port))
+impl MongoDBProvider {
+    pub async fn new(port: i32) -> MongoDBProvider {
+        let client_options = ClientOptions::parse(format!("mongodb://0.0.0.0:{}", port))
             .await
             .unwrap();
         let client = Client::with_options(client_options).unwrap();
         let database = client.database("mydata");
         MongoDBProvider { client, database }
     }
+}
+#[async_trait]
+impl MongoDBProviderTrait for MongoDBProvider {
+    
 
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
         let collection = self.database.collection::<MyData>("dobro");
@@ -60,7 +62,7 @@ impl MongoDBProviderTrait for MongoDBProvider {
     }
 }
 pub async fn add_to_db(
-    db: impl MongoDBProviderTrait,
+    db: impl MongoDBProviderTrait + Clone + Sync,
     data: MyData,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     match db.insert_struct_to_db(data).await {
@@ -71,7 +73,7 @@ pub async fn add_to_db(
         Err(err_str) => Ok(warp::reply::with_status(
             warp::reply::json(&err_str),
             warp::http::StatusCode::NOT_ACCEPTABLE,
-        )),
+        ))
     }
 }
 
@@ -99,17 +101,25 @@ pub async fn get_by_id(
 struct FakeMongoDbProvider {
     provider: MongoDBProvider,
 }
-
 #[cfg(test)]
-#[async_trait]
-impl MongoDBProviderTrait for FakeMongoDbProvider {
-    async fn new(port: i32) -> FakeMongoDbProvider {
+impl FakeMongoDbProvider{
+    pub async fn new(port: i32) -> FakeMongoDbProvider {
         let docker = clients::Cli::default();
+        //let run_arg:RunArgs;
+        //let run_arg=run_arg.with_name("mongo_test");
+        //run_arg.with_network("HostNetwork");
+        //run_arg.with_mapped_port(Port{local:27017,internal:27017});
         let node = docker.run(images::mongo::Mongo::default());
         let host_port = node.get_host_port(port.try_into().unwrap());
         let provider = MongoDBProvider::new(host_port.unwrap().into()).await;
         FakeMongoDbProvider { provider }
     }
+} 
+
+#[cfg(test)]
+#[async_trait]
+impl MongoDBProviderTrait for FakeMongoDbProvider {
+    
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
         self.provider.insert_struct_to_db(data).await
     }
@@ -148,4 +158,24 @@ mod tests {
     }
 
     //TODO: test REST routes with FakeMongo
+}
+use postgres::{Client as PostClient, NoTls};
+use::testcontainers::*;
+#[test]
+fn postgres_one_plus_one() {
+    let docker = clients::Cli::default();
+    let postgres_image = images::postgres::Postgres::default();
+    let node = docker.run(postgres_image);
+
+    let connection_string = &format!(
+        "postgres://postgres:postgres@localhost:{}/postgres",
+        node.get_host_port(5432).unwrap()
+    );
+
+    let mut conn = PostClient::connect(connection_string, NoTls).unwrap();
+
+    for row in conn.query("SELECT 1 + 1", &[]).unwrap() {
+        let first_column: i32 = row.get(0);
+        assert_eq!(first_column, 2);
+    }
 }
