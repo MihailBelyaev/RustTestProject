@@ -1,15 +1,11 @@
 use crate::mydatastruct::MyData;
 use async_trait::async_trait;
 use futures_util::stream::StreamExt;
-use mongodb::{
-    bson::{doc},
-    options::ClientOptions,
-    Client, Database,
-};
+use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 
 use warp::http;
 #[async_trait]
-pub trait MongoDBProviderTrait: Send  {
+pub trait MongoDBProviderTrait: Send {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String>;
     async fn read_from(&self, id: String) -> Result<Vec<MyData>, String>;
 }
@@ -32,12 +28,10 @@ impl MongoDBProvider {
 }
 #[async_trait]
 impl MongoDBProviderTrait for MongoDBProvider {
-    
-
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
         let collection = self.database.collection::<MyData>("dobro");
         match collection.insert_one(data, None).await {
-            Ok(_result) => {
+            Ok(result) => {
                 return futures_util::__private::Ok(());
             }
             Err(err) => return futures_util::__private::Err(err.to_string()),
@@ -74,7 +68,7 @@ pub async fn add_to_db(
         Err(err_str) => Ok(warp::reply::with_status(
             warp::reply::json(&err_str),
             warp::http::StatusCode::NOT_ACCEPTABLE,
-        ))
+        )),
     }
 }
 
@@ -97,4 +91,3 @@ pub async fn get_by_id(
         }
     }
 }
-

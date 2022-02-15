@@ -1,33 +1,35 @@
+use std::sync::Arc;
+
 use crate::mongodbprovider::*;
+use crate::mydatastruct;
 use crate::mydatastruct::*;
+use crate::routes::insert_filter_fcn;
 use async_trait::async_trait;
 #[cfg(test)]
-
+#[derive(Clone)]
 struct FakeMongoDbProvider<'a> {
     provider: MongoDBProvider,
-    node:Container<'a, Cli,GenericImage>
+    node: Arc<Container<'a, Cli, GenericImage>>,
 }
 #[cfg(test)]
-impl FakeMongoDbProvider<'_>{
-    pub async fn new(docker:&Cli,port: i32) -> FakeMongoDbProvider<'_> {
-        
-        let run_arg=RunArgs::default()
+impl FakeMongoDbProvider<'_> {
+    pub async fn new(docker: &Cli, port: i32) -> FakeMongoDbProvider<'_> {
+        let run_arg = RunArgs::default()
             .with_name("mongo_test")
-            .with_mapped_port((port as u16,27017));
+            .with_mapped_port((port as u16, 27017));
         let generic_mongodb = GenericImage::new("mongo:5.0")
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
-        let node = docker.run_with_args(generic_mongodb, run_arg);
-        
+        let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
+
         let provider = MongoDBProvider::new(port).await;
         FakeMongoDbProvider { provider, node }
     }
-} 
+}
 
 #[cfg(test)]
 #[async_trait]
-impl MongoDBProviderTrait for FakeMongoDbProvider<'_>{
-    
+impl MongoDBProviderTrait for FakeMongoDbProvider<'_> {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
         self.provider.insert_struct_to_db(data).await
     }
@@ -36,7 +38,7 @@ impl MongoDBProviderTrait for FakeMongoDbProvider<'_>{
     }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod tests {
     use testcontainers::{clients, Docker};
 
@@ -48,31 +50,33 @@ mod tests {
     #[tokio::test]
     async fn mongo_add_and_read_test() {
         let docker = clients::Cli::default();
-        let fake_mongo = FakeMongoDbProvider::new(&docker,27017).await;
+        let fake_mongo = FakeMongoDbProvider::new(&docker, 27017).await;
         let test_stuct = mydatastruct::create_my_struct(
             "test".to_string(),
             "AAA".to_string(),
             53,
             mydatastruct::Sex::Female,
         );
-        let insert_res=fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
-        assert_eq!(insert_res.is_ok(),true);
-        let second_insert=fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
-        assert_eq!(second_insert.is_err(),true);
-        let read_res_vec=fake_mongo.read_from("test".to_string()).await;
-        assert_eq!(read_res_vec.is_ok(),true);
-        let vec_unw=read_res_vec.unwrap();
-        assert_eq!(vec_unw.len(),1);
-        assert_eq!(vec_unw[0],test_stuct);
+        let insert_res = fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
+        assert_eq!(insert_res.is_ok(), true);
+        let second_insert = fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
+        assert_eq!(second_insert.is_err(), true);
+        let read_res_vec = fake_mongo.read_from("test".to_string()).await;
+        assert_eq!(read_res_vec.is_ok(), true);
+        let vec_unw = read_res_vec.unwrap();
+        assert_eq!(vec_unw.len(), 1);
+        assert_eq!(vec_unw[0], test_stuct);
     }
 
     //TODO: test REST routes with FakeMongo
 }
+use ::testcontainers::*;
 use postgres::{Client as PostClient, NoTls};
-use::testcontainers::*;
 use testcontainers::clients::Cli;
 use testcontainers::images::generic::GenericImage;
 use testcontainers::images::generic::WaitFor;
+use warp::hyper::StatusCode;
+use warp::Filter;
 #[test]
 fn postgres_one_plus_one() {
     let docker = clients::Cli::default();
@@ -90,4 +94,28 @@ fn postgres_one_plus_one() {
         let first_column: i32 = row.get(0);
         assert_eq!(first_column, 2);
     }
+}
+
+#[tokio::test]
+async fn insert_route_test() {
+    let docker = clients::Cli::default();
+    let db_provider = FakeMongoDbProvider::new(docker.clone(), 27017).await;
+    let insert_route = insert_filter_fcn(db_provider.clone()).await;
+    let data_path = warp::path("data");
+    let data_path_routes = data_path.and(insert_route);
+
+    let test_stuct = mydatastruct::create_my_struct(
+        "test".to_string(),
+        "AAA".to_string(),
+        53,
+        mydatastruct::Sex::Female,
+    );
+
+    let req_test = warp::test::request()
+        .path("/data")
+        .method("POST")
+        .body(serde_json::to_string(&test_stuct).unwrap())
+        .reply(&data_path_routes)
+        .await;
+    assert_eq!(req_test.status(), StatusCode::CREATED);
 }
