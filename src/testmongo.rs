@@ -3,10 +3,10 @@ use std::sync::Arc;
 use crate::mongodbprovider::*;
 use crate::mydatastruct;
 use crate::mydatastruct::*;
+use crate::routes::get_filter_fcn;
 use crate::routes::insert_filter_fcn;
 use async_trait::async_trait;
 #[cfg(test)]
-#[derive(Clone)]
 struct FakeMongoDbProvider<'a> {
     provider: MongoDBProvider,
     node: Arc<Container<'a, Cli, GenericImage>>,
@@ -99,8 +99,8 @@ fn postgres_one_plus_one() {
 #[tokio::test]
 async fn insert_route_test() {
     let docker = clients::Cli::default();
-    let db_provider = FakeMongoDbProvider::new(docker.clone(), 27017).await;
-    let insert_route = insert_filter_fcn(db_provider.clone()).await;
+    let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
+    let insert_route = insert_filter_fcn(db_provider.provider.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
@@ -115,7 +115,57 @@ async fn insert_route_test() {
         .path("/data")
         .method("POST")
         .body(serde_json::to_string(&test_stuct).unwrap())
-        .reply(&data_path_routes)
+        .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::CREATED);
+
+    let req_test = warp::test::request()
+        .path("/data")
+        .method("POST")
+        .body(serde_json::to_string(&test_stuct).unwrap())
+        .reply(&data_path_routes.clone())
+        .await;
+    assert_eq!(req_test.status(), StatusCode::NOT_ACCEPTABLE);
+}
+
+#[tokio::test]
+async fn get_route_test() {
+    let docker = clients::Cli::default();
+    let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
+    let get_route = get_filter_fcn(db_provider.provider.clone()).await;
+    let data_path = warp::path("data");
+    let data_path_routes = data_path.and(get_route);
+
+    let test_stuct = mydatastruct::create_my_struct(
+        "test".to_string(),
+        "AAA".to_string(),
+        53,
+        mydatastruct::Sex::Female,
+    );
+
+    
+    let req_test = warp::test::request()
+        .path("/data/test")
+        .method("GET")
+        .reply(&data_path_routes.clone())
+        .await;
+    assert_eq!(req_test.status(), StatusCode::NOT_FOUND);
+
+    let _insert_res=db_provider.provider.insert_struct_to_db(test_stuct.clone()).await;
+    assert_eq!(_insert_res.is_ok(),true);
+
+    let req_test = warp::test::request()
+        .path("/data/test")
+        .method("GET")
+        .reply(&data_path_routes.clone())
+        .await;
+
+    assert_eq!(req_test.status(), StatusCode::FOUND);
+   
+    let body = req_test.into_body();
+
+        let encoded = std::str::from_utf8(&body).unwrap();
+
+        let test_vec=vec![test_stuct];
+        assert_eq!(encoded, serde_json::to_string(&test_vec).unwrap());
 }

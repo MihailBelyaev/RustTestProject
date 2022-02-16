@@ -50,7 +50,11 @@ impl MongoDBProviderTrait for MongoDBProvider {
                     return Err("Internal Error".to_string());
                 }
             }
-            return Ok(vec_res);
+            if vec_res.len() > 0 {
+                return Ok(vec_res);
+            } else {
+                return Err("Not Found!".to_string());
+            }
         } else {
             return Err("Search Error".to_string());
         }
