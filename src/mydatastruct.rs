@@ -23,3 +23,9 @@ pub fn create_my_struct(id: String, first_name: String, age: i32, sex: Sex) -> M
         sex,
     }
 }
+
+impl MyData {
+    pub fn id_getter(&self) -> String {
+        self.id.clone()
+    }
+}

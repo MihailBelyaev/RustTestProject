@@ -6,12 +6,12 @@ use crate::mydatastruct::*;
 use crate::routes::get_filter_fcn;
 use crate::routes::insert_filter_fcn;
 use async_trait::async_trait;
-#[cfg(test)]
+
 struct FakeMongoDbProvider<'a> {
     provider: MongoDBProvider,
     node: Arc<Container<'a, Cli, GenericImage>>,
 }
-#[cfg(test)]
+
 impl FakeMongoDbProvider<'_> {
     pub async fn new(docker: &Cli, port: i32) -> FakeMongoDbProvider<'_> {
         let run_arg = RunArgs::default()
@@ -27,7 +27,6 @@ impl FakeMongoDbProvider<'_> {
     }
 }
 
-#[cfg(test)]
 #[async_trait]
 impl MongoDBProviderTrait for FakeMongoDbProvider<'_> {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
@@ -38,7 +37,6 @@ impl MongoDBProviderTrait for FakeMongoDbProvider<'_> {
     }
 }
 
-#[cfg(test)]
 mod tests {
     use testcontainers::{clients, Docker};
 
@@ -72,6 +70,7 @@ mod tests {
 }
 use ::testcontainers::*;
 use postgres::{Client as PostClient, NoTls};
+use serde_json::json;
 use testcontainers::clients::Cli;
 use testcontainers::images::generic::GenericImage;
 use testcontainers::images::generic::WaitFor;
@@ -111,10 +110,19 @@ async fn insert_route_test() {
         mydatastruct::Sex::Female,
     );
 
+    let test_body_request = json!(
+        {
+            "id": "test",
+            "first_name": "AAA",
+            "age": 53,
+            "sex": "Female"
+        }
+    );
+
     let req_test = warp::test::request()
         .path("/data")
         .method("POST")
-        .body(serde_json::to_string(&test_stuct).unwrap())
+        .body(test_body_request.as_str().unwrap())
         .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::CREATED);
