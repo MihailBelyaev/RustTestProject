@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use futures_util::stream::StreamExt;
 use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 
+use tracing::{info, log::warn};
 use warp::http;
 #[async_trait]
 pub trait MongoDBProviderTrait: Send {
@@ -21,6 +22,7 @@ impl MongoDBProvider {
             .await
             .unwrap();
         //println!("Options:{:#?}",client_options);
+        info!("Creating Mongo client with options: {:#?}",client_options);
         let client = Client::with_options(client_options).unwrap();
         let database = client.database("mydata");
         MongoDBProvider { client, database }
@@ -30,15 +32,21 @@ impl MongoDBProvider {
 impl MongoDBProviderTrait for MongoDBProvider {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String> {
         let collection = self.database.collection::<MyData>("dobro");
+        info!("Inserting struct to DB: {:#?}",data);
         match collection.insert_one(data, None).await {
             Ok(result) => {
+                info!("Successful insertion with id {}",result.inserted_id);
                 return futures_util::__private::Ok(());
             }
-            Err(err) => return futures_util::__private::Err(err.to_string()),
+            Err(err) => {
+                warn!("Insertion failed due to {}",err);
+                return futures_util::__private::Err(err.to_string())
+            },
         }
     }
     async fn read_from(&self, id: String) -> Result<Vec<MyData>, String> {
         let collection = self.database.collection::<MyData>("dobro");
+        info!("Searching for id {}",id);
         let search_result = collection.find(doc! {"_id":id}, None).await;
         if search_result.is_ok() {
             let mut vec_res: Vec<MyData> = Vec::new();
@@ -47,15 +55,19 @@ impl MongoDBProviderTrait for MongoDBProvider {
                 if dt.is_ok() {
                     vec_res.push(dt.unwrap());
                 } else {
+                    warn!("Internal search error!");
                     return Err("Internal Error".to_string());
                 }
             }
             if vec_res.len() > 0 {
+                info!("Got {} result",vec_res.len());
                 return Ok(vec_res);
             } else {
+                warn!("Not Found!");
                 return Err("Not Found!".to_string());
             }
         } else {
+            warn!("Internal search error!");
             return Err("Search Error".to_string());
         }
     }
