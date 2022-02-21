@@ -3,13 +3,17 @@ services:
   test-mongo:
     image: "mongo:5.0"
     container_name: my-mongo
-    ports:
-      - 27017:27017
-
+    networks:
+      - backend
   test-app:
-    build: ./
+    image: "mytestdocker:latest"
     container_name: test-app
     ports:
       - 3030:3030
     links:
       - test-mongo
+    networks:
+      - backend
+networks:
+  backend:
+    name: "my_test_network"

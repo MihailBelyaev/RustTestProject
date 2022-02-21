@@ -125,10 +125,7 @@ async fn rest_post_insert_data_test() {
         .await;
     assert_eq!(req_test.status(), StatusCode::CREATED);
 
-    let inserted_data = db_provider
-        .read_from("test".to_string())
-        .await
-        .unwrap();
+    let inserted_data = db_provider.read_from("test".to_string()).await.unwrap();
     assert_eq!(
         inserted_data[0],
         mydatastruct::create_my_struct(

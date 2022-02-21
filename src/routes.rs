@@ -1,6 +1,9 @@
 use warp::{Filter, Rejection, Reply};
 
-use crate::mongodbprovider::{self, MongoDBProviderTrait};
+use crate::{
+    loginmanager::{self, LogMngTrait},
+    mongodbprovider::{self, MongoDBProviderTrait},
+};
 
 pub async fn insert_filter_fcn(
     db_provider: impl MongoDBProviderTrait + Clone + Sync,
@@ -18,4 +21,14 @@ pub async fn get_filter_fcn(
         .and(warp::any().map(move || db_provider.clone()))
         .and(warp::path::param())
         .and_then(mongodbprovider::get_by_id)
+}
+
+pub async fn login_filter_fcn(
+    login_mgr: impl LogMngTrait + Clone + Sync,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone  {
+    warp::path("login")
+        .and(warp::any().map(move|| login_mgr.clone()))
+        .and(warp::header::<String>("login"))
+        .and(warp::header::<String>("password"))
+        .and_then(loginmanager::check_login_data)
 }
