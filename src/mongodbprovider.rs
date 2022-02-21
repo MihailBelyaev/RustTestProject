@@ -76,6 +76,7 @@ pub async fn add_to_db(
     db: impl MongoDBProviderTrait + Clone + Sync,
     data: MyData,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    info!("insert route");
     match db.insert_struct_to_db(data).await {
         Ok(_) => Ok(warp::reply::with_status(
             warp::reply::json(&"Item successfully created".to_string()),
