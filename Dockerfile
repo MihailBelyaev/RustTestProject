@@ -12,6 +12,6 @@ RUN apt-get update &&\
     apt-get install -y&&\
     rm -rf /var/lib/apt/lists/*
     
-
+ENV RUST_LOG=debug
 COPY --from=build /usr/local/cargo/bin/RustTestProject/release/RustTestProject /usr/local/bin/RustTestProject
 ENTRYPOINT ["RustTestProject"]
