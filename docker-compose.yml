@@ -1,3 +1,4 @@
+version: '3'
 services:
 
   test-mongo:
@@ -11,11 +12,8 @@ services:
   test-app:
     depends_on:
       - test_mongo
-    #command: sh -c './wait-for host:27017 -- cmd'
     build: .
     container_name: test-app
-    environment:
-      - TEST_MONGO_ADDRESS="my-mongo"
     ports:
       - 3030:3030
     links:
