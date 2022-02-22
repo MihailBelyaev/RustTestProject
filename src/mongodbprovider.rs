@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::mydatastruct::MyData;
 use async_trait::async_trait;
 use futures_util::stream::StreamExt;
@@ -17,8 +19,8 @@ pub struct MongoDBProvider {
     database: Database,
 }
 impl MongoDBProvider {
-    pub async fn new(port: i32) -> MongoDBProvider {
-        let client_options = ClientOptions::parse(format!("mongodb://localhost:{}", port))
+    pub async fn new(adress:String,port: i32) -> MongoDBProvider {
+        let client_options = ClientOptions::parse(format!("mongodb://{}:{}", adress,port))
             .await
             .unwrap();
         //println!("Options:{:#?}",client_options);
@@ -107,4 +109,14 @@ pub async fn get_by_id(
             ))
         }
     }
+}
+pub fn get_db_address()->String{
+    let mongo_address:String;
+    match env::var("TEST_MONGO_ADDRESS") {
+        Ok(val)=> {mongo_address=val.clone();
+                        info!("Got Mongo address from enviroment{}",val);},
+        Err(e)   =>{ mongo_address="localhost".to_string();
+    info!("Error:{}, address set to localhost",e);}     
+    }
+    mongo_address
 }

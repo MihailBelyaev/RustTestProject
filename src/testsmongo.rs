@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::mongodbprovider;
 use crate::mongodbprovider::*;
 use crate::mydatastruct;
 use crate::mydatastruct::*;
@@ -21,8 +22,8 @@ impl FakeMongoDbProvider<'_> {
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
         let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
-
-        let provider = MongoDBProvider::new(port).await;
+        let mon_addr=mongodbprovider::get_db_address();
+        let provider = MongoDBProvider::new(mon_addr,port).await;
         FakeMongoDbProvider { provider, node }
     }
 }

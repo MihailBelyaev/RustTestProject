@@ -14,4 +14,5 @@ RUN apt-get update &&\
     
 ENV RUST_LOG=debug
 COPY --from=build /usr/local/cargo/bin/RustTestProject/release/RustTestProject /usr/local/bin/RustTestProject
+EXPOSE 3030
 ENTRYPOINT ["RustTestProject"]

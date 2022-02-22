@@ -1,14 +1,17 @@
+use std::env;
+
 use tracing::info;
 use warp::{Filter, Rejection, Reply};
 use RustTestProject::loginmanager::LoginManager;
-use RustTestProject::mongodbprovider::{MongoDBProvider, MongoDBProviderTrait};
+use RustTestProject::mongodbprovider::{MongoDBProvider, MongoDBProviderTrait, self};
 use RustTestProject::routes::{get_filter_fcn, insert_filter_fcn, login_filter_fcn};
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
     info!("Program started");
-    let db_provider = MongoDBProvider::new(27017).await;
+    let mongo_address:String=mongodbprovider::get_db_address();
+    let db_provider = MongoDBProvider::new(mongo_address,27017).await;
     let login_manager = LoginManager::new();
     info!("Creating routes");
     let db_provider_clone = db_provider.clone();
@@ -22,6 +25,6 @@ async fn main() {
         .or(log_route);
     info!("Starting server");
     warp::serve(data_path_routes)
-        .run(([127, 0, 0, 1], 3030))
+        .run(([0, 0, 0, 0], 3030))
         .await;
 }

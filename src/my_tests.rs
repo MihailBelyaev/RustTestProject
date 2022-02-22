@@ -1,4 +1,4 @@
-use crate::mongodbprovider::{MongoDBProvider, MongoDBProviderTrait};
+use crate::mongodbprovider::{MongoDBProvider, MongoDBProviderTrait, self};
 use crate::mydatastruct;
 use crate::mydatastruct::MyData;
 use crate::routes::{get_filter_fcn, insert_filter_fcn};
@@ -59,7 +59,8 @@ pub fn mongo_setup(docker: &Cli, port: u16) -> Container<Cli, GenericImage> {
 async fn mongo_insert_and_read_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27018);
-    let mongo_provider = MongoDBProvider::new(27018).await;
+    let mongo_addr=mongodbprovider::get_db_address();
+    let mongo_provider = MongoDBProvider::new(mongo_addr,27018).await;
 
     let test_struct = mydatastruct::create_my_struct(
         "test".to_string(),
@@ -82,7 +83,8 @@ async fn mongo_insert_and_read_test() {
 async fn mongo_upsert_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27019);
-    let mongo_provider = MongoDBProvider::new(27019).await;
+    let mongo_addr=mongodbprovider::get_db_address();
+    let mongo_provider = MongoDBProvider::new(mongo_addr,27019).await;
 
     let test_struct = mydatastruct::create_my_struct(
         "test".to_string(),
