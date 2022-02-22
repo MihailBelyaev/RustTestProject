@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::mongodbprovider;
 use crate::mongodbprovider::*;
 use crate::mydatastruct;
 use crate::mydatastruct::*;
@@ -21,8 +22,8 @@ impl FakeMongoDbProvider<'_> {
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
         let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
-
-        let provider = MongoDBProvider::new(port).await;
+        let mon_addr=mongodbprovider::get_db_address_from_env().unwrap();
+        let provider = MongoDBProvider::new(mon_addr,port).await;
         FakeMongoDbProvider { provider, node }
     }
 }
@@ -151,7 +152,6 @@ async fn get_route_test() {
         mydatastruct::Sex::Female,
     );
 
-    
     let req_test = warp::test::request()
         .path("/data/test")
         .method("GET")
@@ -159,8 +159,11 @@ async fn get_route_test() {
         .await;
     assert_eq!(req_test.status(), StatusCode::NOT_FOUND);
 
-    let _insert_res=db_provider.provider.insert_struct_to_db(test_stuct.clone()).await;
-    assert_eq!(_insert_res.is_ok(),true);
+    let _insert_res = db_provider
+        .provider
+        .insert_struct_to_db(test_stuct.clone())
+        .await;
+    assert_eq!(_insert_res.is_ok(), true);
 
     let req_test = warp::test::request()
         .path("/data/test")
@@ -169,11 +172,11 @@ async fn get_route_test() {
         .await;
 
     assert_eq!(req_test.status(), StatusCode::FOUND);
-   
+
     let body = req_test.into_body();
 
-        let encoded = std::str::from_utf8(&body).unwrap();
+    let encoded = std::str::from_utf8(&body).unwrap();
 
-        let test_vec=vec![test_stuct];
-        assert_eq!(encoded, serde_json::to_string(&test_vec).unwrap());
+    let test_vec = vec![test_stuct];
+    assert_eq!(encoded, serde_json::to_string(&test_vec).unwrap());
 }

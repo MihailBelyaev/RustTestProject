@@ -1,9 +1,11 @@
+use std::env::{self, VarError};
+
 use crate::mydatastruct::MyData;
 use async_trait::async_trait;
 use futures_util::stream::StreamExt;
 use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 
-use tracing::{info, log::warn};
+use tracing::{info, log::warn, debug};
 use warp::http;
 #[async_trait]
 pub trait MongoDBProviderTrait: Send {
@@ -17,11 +19,10 @@ pub struct MongoDBProvider {
     database: Database,
 }
 impl MongoDBProvider {
-    pub async fn new(port: i32) -> MongoDBProvider {
-        let client_options = ClientOptions::parse(format!("mongodb://localhost:{}", port))
+    pub async fn new(adress:String,port: i32) -> MongoDBProvider {
+        let client_options = ClientOptions::parse(format!("mongodb://root:example@my-mongo:27017"))
             .await
             .unwrap();
-        //println!("Options:{:#?}",client_options);
         info!("Creating Mongo client with options: {:#?}",client_options);
         let client = Client::with_options(client_options).unwrap();
         let database = client.database("mydata");
@@ -76,6 +77,7 @@ pub async fn add_to_db(
     db: impl MongoDBProviderTrait + Clone + Sync,
     data: MyData,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    debug!("insert route");
     match db.insert_struct_to_db(data).await {
         Ok(_) => Ok(warp::reply::with_status(
             warp::reply::json(&"Item successfully created".to_string()),
@@ -92,6 +94,7 @@ pub async fn get_by_id(
     db: impl MongoDBProviderTrait,
     id: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    debug!("get route");
     match db.read_from(id).await {
         Ok(res) => {
             return Ok(warp::reply::with_status(
@@ -105,5 +108,15 @@ pub async fn get_by_id(
                 http::StatusCode::NOT_FOUND,
             ))
         }
+    }
+}
+pub fn get_db_address_from_env()->Result<String,VarError>{
+    match env::var("TEST_MONGO_ADDRESS") {
+        Ok(val)=> {
+                        info!("Got Mongo address from enviroment{}",val.clone());
+                    Ok(val)},
+        Err(e)   =>{
+    info!("Error:{}",e);
+Err(e)}     
     }
 }

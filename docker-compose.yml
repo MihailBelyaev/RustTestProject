@@ -1,0 +1,26 @@
+version: '3'
+services:
+
+  test-mongo:
+    image: "mongo:5.0"
+    container_name: my-mongo
+    networks:
+      - backend
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+  test-app:
+    depends_on:
+      - test_mongo
+    build: .
+    container_name: test-app
+    ports:
+      - 3030:3030
+    links:
+      - test-mongo
+    networks:
+      - backend
+networks:
+  backend:
+    name: "my_test_network"
+    driver: bridge
