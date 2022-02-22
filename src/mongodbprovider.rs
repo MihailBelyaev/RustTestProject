@@ -20,7 +20,7 @@ pub struct MongoDBProvider {
 }
 impl MongoDBProvider {
     pub async fn new(adress:String,port: i32) -> MongoDBProvider {
-        let client_options = ClientOptions::parse(format!("mongodb://{}:{}", adress,port))
+        let client_options = ClientOptions::parse(format!("mongodb://root:example@my-mongo:27017"))
             .await
             .unwrap();
         //println!("Options:{:#?}",client_options);
