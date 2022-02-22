@@ -22,8 +22,8 @@ impl FakeMongoDbProvider<'_> {
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
         let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
-        let mon_addr=mongodbprovider::get_db_address_from_env().unwrap();
-        let provider = MongoDBProvider::new(mon_addr,port).await;
+        let mon_addr = mongodbprovider::get_db_address_from_env().unwrap();
+        let provider = MongoDBProvider::new(mon_addr, port).await;
         FakeMongoDbProvider { provider, node }
     }
 }

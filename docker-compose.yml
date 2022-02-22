@@ -12,6 +12,8 @@ services:
   test-app:
     depends_on:
       - test_mongo
+    environment:
+      - TEST_MONGO_ADDRESS=value
     build: .
     container_name: test-app
     ports:
