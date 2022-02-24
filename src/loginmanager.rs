@@ -1,8 +1,11 @@
-use std::{collections::BTreeMap, sync::Arc, env};
+
+use std::{ env};
 
 use async_trait::async_trait;
-use tokio::sync::RwLock;
 use warp::{http, Rejection};
+use diesel::{sqlite::SqliteConnection, Connection};
+
+use crate::models::User;
 
 #[async_trait]
 pub trait LogMngTrait: Send {
@@ -11,7 +14,6 @@ pub trait LogMngTrait: Send {
 
 #[derive(Clone)]
 pub struct LoginManager {
-    pub inner: Arc<RwLock<BTreeMap<String, String>>>,
 }
 
 impl LoginManager {
@@ -21,10 +23,9 @@ impl LoginManager {
     pub fn new() -> Self {
         let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
-        let mut little_db: BTreeMap<String, String> = BTreeMap::new();
-        little_db.insert("admin".to_string(), "admin".to_string());
+        SqliteConnection::establish(&database_url)
+          .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
         Self {
-            inner: Arc::new(RwLock::new(little_db)),
         }
     }
 }
@@ -32,8 +33,17 @@ impl LoginManager {
 #[async_trait]
 impl LogMngTrait for LoginManager {
     async fn check_user(&self, user: String, pass: String) -> bool {
-        self.inner.read().await.contains_key(&user)
-            && (self.inner.read().await.get(&user) == futures_util::__private::Some(&pass))
+        let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+        let conn=SqliteConnection::establish(&database_url)
+          .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+        match User::by_login(user.clone(),&conn){
+            Some(res)=>{
+                res.password==pass
+            },
+            None => false
+        }
+        
     }
 }
 
