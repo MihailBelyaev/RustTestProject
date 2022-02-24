@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::Arc};
+use std::{collections::BTreeMap, sync::Arc, env};
 
 use async_trait::async_trait;
 use tokio::sync::RwLock;
@@ -19,6 +19,8 @@ impl LoginManager {
         return "Toad".to_string();
     }
     pub fn new() -> Self {
+        let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
         let mut little_db: BTreeMap<String, String> = BTreeMap::new();
         little_db.insert("admin".to_string(), "admin".to_string());
         Self {
