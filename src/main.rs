@@ -4,7 +4,7 @@ use tracing::info;
 use warp::{Filter, Rejection, Reply};
 use RustTestProject::loginmanager::LoginManager;
 use RustTestProject::mongodbprovider::{self, MongoDBProvider, MongoDBProviderTrait};
-use RustTestProject::routes::{get_filter_fcn, insert_filter_fcn, login_filter_fcn};
+use RustTestProject::routes::{get_filter_fcn, insert_filter_fcn, login_filter_fcn, get_users_fcn};
 
 #[tokio::main]
 async fn main() {
@@ -18,11 +18,13 @@ async fn main() {
     let insert_route = insert_filter_fcn(db_provider.clone()).await;
     let get_route = get_filter_fcn(db_provider_clone.clone()).await;
     let log_route = login_filter_fcn(login_manager.clone()).await;
+    let users_get_route=get_users_fcn().await;
     let data_path = warp::path("data");
     let data_path_routes = data_path
         .and(insert_route)
         .or(data_path.and(get_route))
-        .or(log_route);
+        .or(log_route)
+        .or(users_get_route);
     info!("Starting server");
     warp::serve(data_path_routes)
         .run(([0, 0, 0, 0], 3030))

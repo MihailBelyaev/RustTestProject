@@ -32,3 +32,9 @@ pub async fn login_filter_fcn(
         .and(warp::header::<String>("password"))
         .and_then(loginmanager::check_login_data)
 }
+
+pub async fn get_users_fcn() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    warp::path("users")
+    .and(warp::get())
+    .and_then(loginmanager::get_users_list)
+}

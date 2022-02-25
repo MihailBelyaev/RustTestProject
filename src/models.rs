@@ -16,5 +16,9 @@ impl User{
         } else {
             None
         }
-    }   
+    }
+    
+    pub fn get_list(conn: &SqliteConnection) -> Result<Vec<User>,diesel::result::Error>{
+        user_dsl.load::<User>(conn)//expect("Error while loading users list")
+    }
 }

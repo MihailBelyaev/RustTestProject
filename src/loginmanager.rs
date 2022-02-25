@@ -2,11 +2,11 @@
 use std::{ env};
 
 use async_trait::async_trait;
-use tracing::info;
+use tracing::{info, warn};
 use warp::{http, Rejection};
 use diesel::{sqlite::SqliteConnection, Connection};
 
-use crate::models::User;
+use crate::models::{User, self};
 
 #[async_trait]
 pub trait LogMngTrait: Send {
@@ -62,5 +62,24 @@ pub async fn check_login_data(
     } else {
         info!("No user {}:{}",log,pas);
         return Err(warp::reject());
+    }
+}
+
+pub async fn get_users_list()->Result<impl warp::Reply, Rejection>{
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+        let conn=SqliteConnection::establish(&database_url)
+          .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+          let res=User::get_list(&conn);
+    match res{
+        Ok(users_vec)=>{
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&users_vec),
+                http::StatusCode::OK))
+        },
+        Err(err)=>{
+            warn!("Error while getting user list {}",err);
+            return Err(warp::reject());
+        }
     }
 }
