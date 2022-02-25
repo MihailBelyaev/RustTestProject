@@ -2,6 +2,7 @@
 use std::{ env};
 
 use async_trait::async_trait;
+use tracing::info;
 use warp::{http, Rejection};
 use diesel::{sqlite::SqliteConnection, Connection};
 
@@ -52,12 +53,14 @@ pub async fn check_login_data(
     log: String,
     pas: String,
 ) -> Result<impl warp::Reply, Rejection> {
-    if mngr.check_user(log, pas).await {
+    if mngr.check_user(log.clone(), pas.clone()).await {
+        info!("Got user {}:{}",log,pas);
         return Ok(warp::reply::with_status(
             warp::reply::with_header(warp::reply(), "token", LoginManager::get_security_key()),
             http::StatusCode::OK,
         ));
     } else {
+        info!("No user {}:{}",log,pas);
         return Err(warp::reject());
     }
 }

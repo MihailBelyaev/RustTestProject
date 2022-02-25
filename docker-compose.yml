@@ -23,7 +23,7 @@ services:
     volumes:
       - ./users.db:/users.db
     env_file:
-      - ./.env
+      - ./dev.env
 networks:
   backend:
     name: "my_test_network"
