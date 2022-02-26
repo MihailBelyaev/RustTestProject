@@ -12,6 +12,7 @@ pub async fn insert_filter_fcn(
     warp::post()
         .and(warp::any().map(move || db_provider.clone()))
         .and(warp::body::json())
+        .and(warp::header::<String>("autorization"))
         .and_then(mongodbprovider::add_to_db)
 }
 
@@ -21,6 +22,7 @@ pub async fn get_filter_fcn(
     warp::get()
         .and(warp::any().map(move || db_provider.clone()))
         .and(warp::path::param())
+        .and(warp::header::<String>("autorization"))
         .and_then(mongodbprovider::get_by_id)
 }
 
