@@ -2,6 +2,7 @@ use warp::{Filter, Rejection, Reply};
 
 use crate::{
     loginmanager::{self, LogMngTrait},
+    models::User,
     mongodbprovider::{self, MongoDBProviderTrait},
 };
 
@@ -25,16 +26,29 @@ pub async fn get_filter_fcn(
 
 pub async fn login_filter_fcn(
     login_mgr: impl LogMngTrait + Clone + Sync,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone  {
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     warp::path("login")
-        .and(warp::any().map(move|| login_mgr.clone()))
+        .and(warp::any().map(move || login_mgr.clone()))
         .and(warp::header::<String>("login"))
         .and(warp::header::<String>("password"))
         .and_then(loginmanager::check_login_data)
 }
 
-pub async fn get_users_fcn() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub async fn get_users_fcn(
+    mngr: impl LogMngTrait + Clone + Sync,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     warp::path("users")
-    .and(warp::get())
-    .and_then(loginmanager::get_users_list)
+        .and(warp::get())
+        .and(warp::any().map(move || mngr.clone()))
+        .and_then(loginmanager::get_users_list)
+}
+
+pub async fn post_user_fcn(
+    mngr: impl LogMngTrait + Clone + Sync,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    warp::path("users")
+        .and(warp::post())
+        .and(warp::any().map(move || mngr.clone()))
+        .and(warp::body::json())
+        .and_then(loginmanager::insert_user)
 }
