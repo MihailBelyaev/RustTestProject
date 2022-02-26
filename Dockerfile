@@ -7,4 +7,6 @@ FROM debian:buster-slim as runtime
 ENV RUST_LOG=debug
 COPY --from=build /usr/local/cargo/bin/RustTestProject/release/RustTestProject /usr/local/bin/RustTestProject
 EXPOSE 3030
+
+RUN apt update && apt install sqlite3 -y
 ENTRYPOINT ["RustTestProject"]

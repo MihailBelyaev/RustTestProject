@@ -6,11 +6,9 @@ use futures_util::stream::StreamExt;
 use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 
 use tracing::{debug, info, log::warn};
-use warp::{
-    http,
-    reply::{self, Json},
-    Reply,
-};
+
+use warp::http;
+
 #[async_trait]
 pub trait MongoDBProviderTrait: Send {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String>;

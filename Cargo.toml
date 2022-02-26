@@ -16,5 +16,7 @@ testcontainers = "0.12.0"
 tracing-subscriber = { version = "0.3", features = ["tracing-log", "env-filter"] }
 async-trait = "0.1.52"
 anyhow = "1.0.53"
-postgres = "0.19.2"
 tracing = "0.1.31"
+diesel = { version = "1.4.8", features =["sqlite"]}
+diesel_migrations = "1.4.0"
+dotenv = "0.15.0"

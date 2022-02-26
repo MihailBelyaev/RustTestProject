@@ -70,31 +70,12 @@ mod tests {
     //TODO: test REST routes with FakeMongo
 }
 use ::testcontainers::*;
-use postgres::{Client as PostClient, NoTls};
 use serde_json::json;
 use testcontainers::clients::Cli;
 use testcontainers::images::generic::GenericImage;
 use testcontainers::images::generic::WaitFor;
 use warp::hyper::StatusCode;
 use warp::Filter;
-#[test]
-fn postgres_one_plus_one() {
-    let docker = clients::Cli::default();
-    let postgres_image = images::postgres::Postgres::default();
-    let node = docker.run(postgres_image);
-
-    let connection_string = &format!(
-        "postgres://postgres:postgres@localhost:{}/postgres",
-        node.get_host_port(5432).unwrap()
-    );
-
-    let mut conn = PostClient::connect(connection_string, NoTls).unwrap();
-
-    for row in conn.query("SELECT 1 + 1", &[]).unwrap() {
-        let first_column: i32 = row.get(0);
-        assert_eq!(first_column, 2);
-    }
-}
 
 #[tokio::test]
 async fn insert_route_test() {

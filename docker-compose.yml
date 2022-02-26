@@ -22,6 +22,10 @@ services:
       - test-mongo
     networks:
       - backend
+    volumes:
+      - ./users.db:/users.db
+    env_file:
+      - ./dev.env
 networks:
   backend:
     name: "my_test_network"
