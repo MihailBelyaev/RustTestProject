@@ -5,7 +5,7 @@ use warp::Filter;
 use RustTestProject::loginmanager::LoginManager;
 use RustTestProject::mongodbprovider::{self, MongoDBProvider};
 use RustTestProject::routes::{
-    get_filter_fcn, get_users_fcn, insert_filter_fcn, login_filter_fcn, post_user_fcn,
+    get_filter_fcn, get_users_fcn, insert_filter_fcn, login_filter_fcn, post_user_fcn, get_certain_user, update_certain_user, delete_certain_user,
 };
 
 #[tokio::main]
@@ -24,13 +24,19 @@ async fn main() {
     let log_route = login_filter_fcn(login_manager.clone()).await;
     let users_get_route = get_users_fcn(login_manager.clone()).await;
     let users_insert_route = post_user_fcn(login_manager.clone()).await;
+    let user_get_route=get_certain_user(login_manager.clone()).await;
+    let user_update_route=update_certain_user(login_manager.clone()).await;
+    let user_delete_route=delete_certain_user(login_manager.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path
         .and(insert_route)
         .or(data_path.and(get_route))
         .or(log_route)
         .or(users_get_route)
-        .or(users_insert_route);
+        .or(users_insert_route)
+        .or(user_get_route)
+        .or(user_update_route)
+        .or(user_delete_route);
     info!("Starting server");
     warp::serve(data_path_routes)
         .run(([0, 0, 0, 0], 3030))

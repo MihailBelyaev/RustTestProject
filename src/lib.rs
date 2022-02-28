@@ -9,6 +9,6 @@ pub mod mydatastruct;
 pub mod routes;
 pub mod schema;
 #[cfg(test)]
-pub mod testsmongo;
-#[cfg(test)]
 pub mod testlogin;
+#[cfg(test)]
+pub mod testsmongo;

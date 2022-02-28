@@ -1,15 +1,18 @@
 use std::env;
 
-use diesel::{sqlite::SqliteConnection, Connection};
+use diesel::{sqlite::SqliteConnection, Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
 use tracing::{info, warn};
 use warp::{http, Rejection};
 
-use crate::models::User;
+use crate::{models::User, schema};
 
 pub trait LogMngTrait: Send {
     fn check_user(&self, user: String, pass: String) -> bool;
     fn get_users_list(&self) -> Result<Vec<User>, diesel::result::Error>;
     fn insert_new_user(&self, new_user: User) -> bool;
+    fn get_by_login(&self, login: String) -> Option<User>;
+    fn update_password(&self, new_data: User) -> bool;
+    fn delete_user(&self, login: String) -> bool;
 }
 
 #[derive(Clone)]
@@ -48,6 +51,28 @@ impl LogMngTrait for LoginManager {
         let conn = SqliteConnection::establish(&self.db_url)
             .unwrap_or_else(|_| panic!("Error connecting to {}", self.db_url));
         User::insert_new_user(&conn, new_user)
+    }
+    fn get_by_login(&self, login: String) -> Option<User> {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let conn = SqliteConnection::establish(&database_url)
+            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+        User::by_login(login, &conn)
+    }
+
+    fn update_password(&self, new_data: User) -> bool {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let conn = SqliteConnection::establish(&database_url)
+            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+        User::update_user_password(&conn, new_data.clone())
+    }
+
+    fn delete_user(&self, login: String) -> bool {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let conn = SqliteConnection::establish(&database_url)
+            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+        let dsl_filter = schema::users::dsl::users.filter(schema::users::login.eq(login));
+        let res = diesel::delete(dsl_filter).execute(&conn);
+        res.is_ok()
     }
 }
 
@@ -91,6 +116,57 @@ pub async fn insert_user(
     new_user: User,
 ) -> Result<impl warp::Reply, Rejection> {
     if mngr.insert_new_user(new_user) {
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&"Success!".to_string()),
+            http::StatusCode::OK,
+        ));
+    } else {
+        return Err(warp::reject());
+    }
+}
+
+pub async fn get_certain_user(
+    mngr: impl LogMngTrait + Clone + Sync,
+    user_id: String,
+) -> Result<impl warp::Reply, Rejection> {
+    let res = mngr.get_by_login(user_id);
+    if res.is_some() {
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&res.unwrap()),
+            http::StatusCode::OK,
+        ));
+    } else {
+        return Err(warp::reject());
+    }
+}
+
+pub async fn update_certain_user(
+    mngr: impl LogMngTrait + Clone + Sync,
+    user_id: String,
+    new_data: User,
+) -> Result<impl warp::Reply, Rejection> {
+    if new_data.login != user_id {
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&"login mismatch!".to_string()),
+            http::StatusCode::BAD_REQUEST,
+        ));
+    } else {
+        if mngr.update_password(new_data) {
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&"Success!".to_string()),
+                http::StatusCode::OK,
+            ));
+        } else {
+            return Err(warp::reject());
+        }
+    }
+}
+
+pub async fn delete_certain_user(
+    mngr: impl LogMngTrait + Clone + Sync,
+    user_id: String,
+) -> Result<impl warp::Reply, Rejection> {
+    if mngr.delete_user(user_id) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Success!".to_string()),
             http::StatusCode::OK,
