@@ -1,0 +1,6 @@
+CREATE TABLE history (
+  num BIGINT PRIMARY KEY NOT NULL,
+  login VARCHAR NOT NULL,
+  request VARCHAR NOT NULL,
+  timestamp DATETIME NOT NULL
+)

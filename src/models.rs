@@ -1,6 +1,9 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::schema;
+use crate::schema::users::password;
+
 use super::schema::users;
 use super::schema::users::dsl::users as user_dsl;
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Clone)]
@@ -26,5 +29,20 @@ impl User {
             .values(&new_user)
             .execute(conn);
         res.is_ok()
+    }
+    pub fn update_user_password(conn: &SqliteConnection, new_user: User) -> bool {
+        let dsl_filter = schema::users::dsl::users.filter(schema::users::login.eq(new_user.login));
+        let res = diesel::update(dsl_filter)
+            .set(schema::users::password.eq(new_user.password))
+            .execute(conn);
+        if res.is_ok() {
+            if res.unwrap() == 0 {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 }

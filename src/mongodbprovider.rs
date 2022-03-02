@@ -7,7 +7,10 @@ use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 
 use tracing::{debug, info, log::warn};
 
-use warp::http;
+use warp::{
+    http,
+    reply::{self, Json},
+};
 
 #[async_trait]
 pub trait MongoDBProviderTrait: Send {
