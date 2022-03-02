@@ -1,12 +1,12 @@
-use std::env;
+use std::{env, sync::Arc};
 
-use diesel::{sqlite::SqliteConnection, Connection, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{sqlite::SqliteConnection, Connection, ExpressionMethods, QueryDsl, RunQueryDsl, r2d2::{Pool, ConnectionManager}};
 use tracing::{info, warn};
 use warp::{http, Rejection};
 
 use crate::{models::User, schema};
 
-pub trait LogMngTrait: Send {
+pub trait LogMngTrait:Send {
     fn check_user(&self, user: String, pass: String) -> bool;
     fn get_users_list(&self) -> Result<Vec<User>, diesel::result::Error>;
     fn insert_new_user(&self, new_user: User) -> bool;
@@ -17,25 +17,23 @@ pub trait LogMngTrait: Send {
 
 #[derive(Clone)]
 pub struct LoginManager {
-    db_url: String,
+    db_pool:Pool<ConnectionManager<SqliteConnection>>
 }
 
 impl LoginManager {
     pub fn get_security_key() -> String {
         return "Toad".to_string();
     }
-    pub fn new(db_url: String) -> Self {
-        SqliteConnection::establish(&db_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", db_url));
-        Self { db_url }
+    pub fn new(db_url: String) -> Self {   
+         let pool=Pool::builder().max_size(15).build(ConnectionManager::<SqliteConnection>::new(db_url)).unwrap();
+        Self {db_pool:pool }
     }
 }
 
 impl LogMngTrait for LoginManager {
     fn check_user(&self, user: String, pass: String) -> bool {
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let conn = SqliteConnection::establish(&database_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+        let conn = self.db_pool.get()
+            .unwrap_or_else(|_| panic!("Error connecting to DB"));
         match User::by_login(user.clone(), &conn) {
             Some(res) => res.password == pass,
             None => false,
@@ -43,27 +41,19 @@ impl LogMngTrait for LoginManager {
     }
 
     fn get_users_list(&self) -> Result<Vec<User>, diesel::result::Error> {
-        let conn = SqliteConnection::establish(&self.db_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", self.db_url));
-        User::get_list(&conn)
+        User::get_list(&self.db_pool.get().unwrap())
     }
     fn insert_new_user(&self, new_user: User) -> bool {
-        let conn = SqliteConnection::establish(&self.db_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", self.db_url));
-        User::insert_new_user(&conn, new_user)
+        
+        User::insert_new_user(&self.db_pool.get().unwrap(), new_user)
     }
     fn get_by_login(&self, login: String) -> Option<User> {
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let conn = SqliteConnection::establish(&database_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
-        User::by_login(login, &conn)
+       
+        User::by_login(login, &self.db_pool.get().unwrap())
     }
 
     fn update_password(&self, new_data: User) -> bool {
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let conn = SqliteConnection::establish(&database_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
-        User::update_user_password(&conn, new_data.clone())
+        User::update_user_password(&self.db_pool.get().unwrap(), new_data.clone())
     }
 
     fn delete_user(&self, login: String) -> bool {
@@ -169,7 +159,7 @@ pub async fn delete_certain_user(
     if mngr.delete_user(user_id) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Success!".to_string()),
-            http::StatusCode::OK,
+            http::StatusCode::NO_CONTENT,
         ));
     } else {
         return Err(warp::reject());
