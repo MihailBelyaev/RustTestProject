@@ -1,2 +1,2 @@
-INSERT INTO users (login ,password) VALUES ('admin','admin');
-INSERT INTO users (login ,password) VALUES ('pacan','bandit');
+INSERT INTO users (login ,password,token) VALUES ('admin','admin','admin');
+INSERT INTO users (login ,password,token) VALUES ('pacan','bandit','TOAD');

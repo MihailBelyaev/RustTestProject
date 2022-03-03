@@ -31,6 +31,7 @@ impl LogMngTrait for MockLogMngr {
             res.push(User {
                 login: log.to_string(),
                 password: pass.to_string(),
+                token: todo!(),
             });
         }
         Ok(res)

@@ -1,6 +1,9 @@
 use std::env::{self, VarError};
 
-use crate::{loginmanager::LoginManager, mydatastruct::MyData};
+use crate::{
+    loginmanager::{LogMngTrait, LoginManager},
+    mydatastruct::MyData,
+};
 use async_trait::async_trait;
 use futures_util::stream::StreamExt;
 use mongodb::{bson::doc, options::ClientOptions, Client, Database};
@@ -80,11 +83,12 @@ impl MongoDBProviderTrait for MongoDBProvider {
 }
 pub async fn add_to_db(
     db: impl MongoDBProviderTrait + Clone + Sync,
+    mngr: impl LogMngTrait + Clone + Sync,
     data: MyData,
     token: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     debug!("insert route");
-    if (token != LoginManager::get_security_key()) {
+    if !mngr.check_token(token, format!("Add data to DB {:?}", data.clone())) {
         return Ok(create_forb_rep());
     }
     match db.insert_struct_to_db(data).await {
@@ -101,11 +105,12 @@ pub async fn add_to_db(
 
 pub async fn get_by_id(
     db: impl MongoDBProviderTrait,
+    mngr: impl LogMngTrait + Clone + Sync,
     id: String,
     token: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     debug!("get route");
-    if (token != LoginManager::get_security_key()) {
+    if !mngr.check_token(token, format!("Get data from DB by id {}", id.clone())) {
         return Ok(create_forb_rep());
     }
     match db.read_from(id).await {
