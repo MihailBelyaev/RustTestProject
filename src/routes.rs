@@ -23,11 +23,12 @@ pub async fn get_filter_fcn(
     mngr: impl LogMngTrait + Clone + Sync,
 ) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     warp::get()
-        .and(warp::path::end())
+        
         .and(warp::any().map(move || db_provider.clone()))
         .and(warp::any().map(move || mngr.clone()))
         .and(warp::path::param())
         .and(warp::header::<String>("autorization"))
+        .and(warp::path::end())
         .and_then(mongodbprovider::get_by_id)
 }
 
@@ -73,6 +74,7 @@ pub async fn get_certain_user(
         .and(warp::any().map(move || mngr.clone()))
         .and(warp::path::param())
         .and(warp::header::<String>("autorization"))
+        .and(warp::path::end())
         .and_then(loginmanager::get_certain_user)
 }
 
@@ -85,6 +87,7 @@ pub async fn update_certain_user(
         .and(warp::path::param())
         .and(warp::body::json())
         .and(warp::header::<String>("autorization"))
+        .and(warp::path::end())
         .and_then(loginmanager::update_certain_user)
 }
 
@@ -96,6 +99,7 @@ pub async fn delete_certain_user(
         .and(warp::any().map(move || mngr.clone()))
         .and(warp::path::param())
         .and(warp::header::<String>("autorization"))
+        .and(warp::path::end())
         .and_then(loginmanager::delete_certain_user)
 }
 
@@ -106,5 +110,6 @@ pub async fn get_history_fcn(
         .and(warp::get())
         .and(warp::any().map(move || mngr.clone()))
         .and(warp::path::param())
+        .and(warp::path::end())
         .and_then(loginmanager::get_history_for_user)
 }
