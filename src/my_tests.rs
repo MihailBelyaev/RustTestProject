@@ -1,3 +1,4 @@
+use crate::loginmanager::{LogMngTrait, SimplifiedUser};
 use crate::mongodbprovider::{self, MongoDBProvider, MongoDBProviderTrait};
 use crate::mydatastruct;
 use crate::mydatastruct::MyData;
@@ -5,23 +6,24 @@ use crate::routes::{get_filter_fcn, insert_filter_fcn};
 use async_trait::async_trait;
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use testcontainers::clients::Cli;
 use testcontainers::images::generic::{GenericImage, WaitFor};
 use testcontainers::{clients, Container, Docker, RunArgs};
-use tokio::sync::RwLock;
+use tokio::sync::RwLock as TokioRwLock;
 use warp::http::StatusCode;
 use warp::Filter;
+use crate::testlogin::MockLogMngr;
 
 #[derive(Clone, Default)]
 struct FakeMongoProvider2 {
-    pub inner: Arc<RwLock<BTreeMap<String, MyData>>>,
+    pub inner: Arc<TokioRwLock<BTreeMap<String, MyData>>>,
 }
 
 impl FakeMongoProvider2 {
     fn new() -> Self {
         Self {
-            inner: Arc::new(RwLock::new(BTreeMap::new())),
+            inner: Arc::new(TokioRwLock::new(BTreeMap::new())),
         }
     }
 }
@@ -106,7 +108,15 @@ async fn mongo_upsert_test() {
 #[tokio::test]
 async fn rest_post_insert_data_test() {
     let db_provider = FakeMongoProvider2::default();
-    let insert_route = insert_filter_fcn(db_provider.clone()).await;
+    let mngr = MockLogMngr {
+        inner: Arc::new(RwLock::new(BTreeMap::new())),
+    };
+    let test_stuct = SimplifiedUser {
+        login: "123".to_string(),
+        password: "321".to_string(),
+    };
+    mngr.insert_new_user(test_stuct.clone());
+    let insert_route = insert_filter_fcn(db_provider.clone(),mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
@@ -151,8 +161,15 @@ async fn rest_get_read_data_with_data_contains_test() {
     );
 
     db_provider.insert_struct_to_db(test_struct).await.unwrap();
-
-    let insert_route = get_filter_fcn(db_provider).await;
+    let mngr = MockLogMngr {
+        inner: Arc::new(RwLock::new(BTreeMap::new())),
+    };
+    let test_stuct = SimplifiedUser {
+        login: "123".to_string(),
+        password: "321".to_string(),
+    };
+    mngr.insert_new_user(test_stuct.clone());
+    let insert_route = get_filter_fcn(db_provider,mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 

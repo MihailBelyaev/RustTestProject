@@ -1,5 +1,9 @@
+use std::collections::BTreeMap;
 use std::sync::Arc;
+use std::sync::RwLock;
 
+use crate::loginmanager::LogMngTrait;
+use crate::loginmanager::SimplifiedUser;
 use crate::mongodbprovider;
 use crate::mongodbprovider::*;
 use crate::mydatastruct;
@@ -76,12 +80,21 @@ use testcontainers::images::generic::GenericImage;
 use testcontainers::images::generic::WaitFor;
 use warp::hyper::StatusCode;
 use warp::Filter;
+use crate::testlogin::MockLogMngr;
 
 #[tokio::test]
 async fn insert_route_test() {
     let docker = clients::Cli::default();
     let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
-    let insert_route = insert_filter_fcn(db_provider.provider.clone()).await;
+    let mngr = MockLogMngr {
+        inner: Arc::new(RwLock::new(BTreeMap::new())),
+    };
+    let test_stuct = SimplifiedUser {
+        login: "123".to_string(),
+        password: "321".to_string(),
+    };
+    mngr.insert_new_user(test_stuct.clone());
+    let insert_route = insert_filter_fcn(db_provider.provider.clone(),mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
@@ -122,7 +135,15 @@ async fn insert_route_test() {
 async fn get_route_test() {
     let docker = clients::Cli::default();
     let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
-    let get_route = get_filter_fcn(db_provider.provider.clone()).await;
+    let mngr = MockLogMngr {
+        inner: Arc::new(RwLock::new(BTreeMap::new())),
+    };
+    let test_stuct = SimplifiedUser {
+        login: "123".to_string(),
+        password: "321".to_string(),
+    };
+    mngr.insert_new_user(test_stuct.clone());
+    let get_route = get_filter_fcn(db_provider.provider.clone(),mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(get_route);
 

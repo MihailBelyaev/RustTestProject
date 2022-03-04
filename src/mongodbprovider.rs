@@ -1,7 +1,7 @@
 use std::env::{self, VarError};
 
 use crate::{
-    loginmanager::{LogMngTrait, LoginManager},
+    loginmanager::LogMngTrait,
     mydatastruct::MyData,
 };
 use async_trait::async_trait;
