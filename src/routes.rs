@@ -23,7 +23,6 @@ pub async fn get_filter_fcn(
     mngr: impl LogMngTrait + Clone + Sync,
 ) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     warp::get()
-        
         .and(warp::any().map(move || db_provider.clone()))
         .and(warp::any().map(move || mngr.clone()))
         .and(warp::path::param())

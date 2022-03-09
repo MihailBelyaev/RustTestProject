@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::env;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -26,8 +27,10 @@ impl FakeMongoDbProvider<'_> {
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
         let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
-        let mon_addr = mongodbprovider::get_db_address_from_env().unwrap();
-        let provider = MongoDBProvider::new(mon_addr, port).await;
+        let mon_addr = "localhost".to_string();//mongodbprovider::get_db_address_from_env().unwrap();
+        let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
+        let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
+        let provider = MongoDBProvider::new(MongoConnectionParameters{ address: mon_addr, port, user_name: db_name, password: db_pass }).await;
         FakeMongoDbProvider { provider, node }
     }
 }
@@ -73,6 +76,7 @@ mod tests {
 
     //TODO: test REST routes with FakeMongo
 }
+use crate::testlogin::MockLogMngr;
 use ::testcontainers::*;
 use serde_json::json;
 use testcontainers::clients::Cli;
@@ -80,7 +84,6 @@ use testcontainers::images::generic::GenericImage;
 use testcontainers::images::generic::WaitFor;
 use warp::hyper::StatusCode;
 use warp::Filter;
-use crate::testlogin::MockLogMngr;
 
 #[tokio::test]
 async fn insert_route_test() {
@@ -94,7 +97,7 @@ async fn insert_route_test() {
         password: "321".to_string(),
     };
     mngr.insert_new_user(test_stuct.clone());
-    let insert_route = insert_filter_fcn(db_provider.provider.clone(),mngr.clone()).await;
+    let insert_route = insert_filter_fcn(db_provider.provider.clone(), mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
@@ -107,7 +110,7 @@ async fn insert_route_test() {
 
     let test_body_request = json!(
         {
-            "id": "test",
+            "_id": "test",
             "first_name": "AAA",
             "age": 53,
             "sex": "Female"
@@ -117,7 +120,8 @@ async fn insert_route_test() {
     let req_test = warp::test::request()
         .path("/data")
         .method("POST")
-        .body(test_body_request.as_str().unwrap())
+        .header("autorization", "123")
+        .body(serde_json::to_string(&test_body_request).unwrap())
         .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::CREATED);
@@ -125,6 +129,7 @@ async fn insert_route_test() {
     let req_test = warp::test::request()
         .path("/data")
         .method("POST")
+        .header("autorization", "123")
         .body(serde_json::to_string(&test_stuct).unwrap())
         .reply(&data_path_routes.clone())
         .await;
@@ -143,7 +148,7 @@ async fn get_route_test() {
         password: "321".to_string(),
     };
     mngr.insert_new_user(test_stuct.clone());
-    let get_route = get_filter_fcn(db_provider.provider.clone(),mngr.clone()).await;
+    let get_route = get_filter_fcn(db_provider.provider.clone(), mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(get_route);
 
@@ -157,6 +162,7 @@ async fn get_route_test() {
     let req_test = warp::test::request()
         .path("/data/test")
         .method("GET")
+        .header("autorization", "123")
         .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::NOT_FOUND);
@@ -170,6 +176,7 @@ async fn get_route_test() {
     let req_test = warp::test::request()
         .path("/data/test")
         .method("GET")
+        .header("autorization", "123")
         .reply(&data_path_routes.clone())
         .await;
 

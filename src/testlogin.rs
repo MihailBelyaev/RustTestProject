@@ -39,8 +39,15 @@ impl LogMngTrait for MockLogMngr {
         if tmp.contains_key(&new_user.login) {
             false
         } else {
-            let tmp_user=new_user.clone();
-            tmp.insert(new_user.login.clone(), User{login:tmp_user.login,password:tmp_user.password,token:new_user.login.clone()});
+            let tmp_user = new_user.clone();
+            tmp.insert(
+                new_user.login.clone(),
+                User {
+                    login: tmp_user.login,
+                    password: tmp_user.password,
+                    token: new_user.login.clone(),
+                },
+            );
             true
         }
     }
@@ -85,12 +92,14 @@ impl LogMngTrait for MockLogMngr {
         true
     }
 
-    fn get_history(&self, login: String) -> Result<Vec<crate::models::History>, diesel::result::Error> {
+    fn get_history(
+        &self,
+        login: String,
+    ) -> Result<Vec<crate::models::History>, diesel::result::Error> {
         let tmp = self.inner.read().unwrap();
-        if tmp.contains_key(&login){
+        if tmp.contains_key(&login) {
             Ok(Vec::new())
-        }
-        else{
+        } else {
             Err(diesel::result::Error::NotFound)
         }
     }
@@ -119,7 +128,7 @@ async fn login_route_test() {
         req_test.headers().get("token").unwrap().to_str().unwrap(),
         mngr.get_security_key(test_stuct.login.clone())
     );
-    let test_login=test_stuct.login.clone();
+    let test_login = test_stuct.login.clone();
     let req_test = warp::test::request()
         .path("/login")
         .header("login", &test_login)

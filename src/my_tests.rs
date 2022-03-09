@@ -3,17 +3,17 @@ use crate::mongodbprovider::{self, MongoDBProvider, MongoDBProviderTrait};
 use crate::mydatastruct;
 use crate::mydatastruct::MyData;
 use crate::routes::{get_filter_fcn, insert_filter_fcn};
+use crate::testlogin::MockLogMngr;
 use async_trait::async_trait;
 use serde_json::json;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 use testcontainers::clients::Cli;
 use testcontainers::images::generic::{GenericImage, WaitFor};
-use testcontainers::{clients, Container, Docker, RunArgs};
+use testcontainers::{clients, Container, Docker, RunArgs}; 
 use tokio::sync::RwLock as TokioRwLock;
 use warp::http::StatusCode;
 use warp::Filter;
-use crate::testlogin::MockLogMngr;
 
 #[derive(Clone, Default)]
 struct FakeMongoProvider2 {
@@ -61,8 +61,10 @@ pub fn mongo_setup(docker: &Cli, port: u16) -> Container<Cli, GenericImage> {
 async fn mongo_insert_and_read_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27018);
-    let mongo_addr = mongodbprovider::get_db_address_from_env().unwrap();
-    let mongo_provider = MongoDBProvider::new(mongo_addr, 27018).await;
+    let mongo_addr = "localhost".to_string();mongodbprovider::get_db_address_from_env().unwrap();
+    let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
+    let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
+    let mongo_provider = MongoDBProvider::new(mongodbprovider::MongoConnectionParameters { address: mongo_addr, port: 27018, user_name: db_name, password: db_pass }).await;
 
     let test_struct = mydatastruct::create_my_struct(
         "test".to_string(),
@@ -85,8 +87,10 @@ async fn mongo_insert_and_read_test() {
 async fn mongo_upsert_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27019);
-    let mongo_addr = mongodbprovider::get_db_address_from_env().unwrap();
-    let mongo_provider = MongoDBProvider::new(mongo_addr, 27019).await;
+    let mongo_addr = "localhost".to_string();mongodbprovider::get_db_address_from_env().unwrap();
+    let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
+    let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
+    let mongo_provider = MongoDBProvider::new(mongodbprovider::MongoConnectionParameters { address: mongo_addr, port: 27019, user_name: db_name, password: db_pass }).await;
 
     let test_struct = mydatastruct::create_my_struct(
         "test".to_string(),
@@ -116,7 +120,7 @@ async fn rest_post_insert_data_test() {
         password: "321".to_string(),
     };
     mngr.insert_new_user(test_stuct.clone());
-    let insert_route = insert_filter_fcn(db_provider.clone(),mngr.clone()).await;
+    let insert_route = insert_filter_fcn(db_provider.clone(), mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
@@ -132,6 +136,7 @@ async fn rest_post_insert_data_test() {
     let req_test = warp::test::request()
         .path("/data")
         .method("POST")
+        .header("autorization", "123")
         .body(serde_json::to_string(&test_body_request).unwrap())
         .reply(&data_path_routes.clone())
         .await;
@@ -151,7 +156,7 @@ async fn rest_post_insert_data_test() {
 
 #[tokio::test]
 async fn rest_get_read_data_with_data_contains_test() {
-    let mut db_provider = FakeMongoProvider2::default();
+    let db_provider = FakeMongoProvider2::default();
 
     let test_struct = mydatastruct::create_my_struct(
         "test".to_string(),
@@ -169,24 +174,25 @@ async fn rest_get_read_data_with_data_contains_test() {
         password: "321".to_string(),
     };
     mngr.insert_new_user(test_stuct.clone());
-    let insert_route = get_filter_fcn(db_provider,mngr.clone()).await;
+    let insert_route = get_filter_fcn(db_provider, mngr.clone()).await;
     let data_path = warp::path("data");
     let data_path_routes = data_path.and(insert_route);
 
     let req_test = warp::test::request()
         .path("/data/test")
         .method("GET")
+        .header("autorization", "123")
         .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::FOUND);
 
     let assert_body = json!(
-        {
+        [{
             "_id": "test",
             "first_name": "AAA",
             "age": 53,
             "sex": "Female"
-        }
+        }]
     );
 
     let body = req_test.into_body();
