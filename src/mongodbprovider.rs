@@ -1,6 +1,6 @@
 use std::env::{self, VarError};
 
-use crate::{loginmanager::LoginManager, mydatastruct::MyData};
+use crate::{loginmanager::LogMngTrait, mydatastruct::MyData};
 use async_trait::async_trait;
 use futures_util::stream::StreamExt;
 use mongodb::{bson::doc, options::ClientOptions, Client, Database};
@@ -17,6 +17,26 @@ pub trait MongoDBProviderTrait: Send {
     async fn insert_struct_to_db(&self, data: MyData) -> Result<(), String>;
     async fn read_from(&self, id: String) -> Result<Vec<MyData>, String>;
 }
+#[derive(Clone)]
+pub struct MongoConnectionParameters {
+    pub address: String,
+    pub port: i32,
+    pub user_name: String,
+    pub password: String,
+}
+
+impl MongoConnectionParameters {
+    pub fn to_string(&self) -> String {
+        if self.user_name.is_empty() {
+            format!("mongodb://{}:{}", self.address, self.port)
+        } else {
+            format!(
+                "mongodb://{}:{}@{}:{}",
+                self.user_name, self.password, self.address, self.port
+            )
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct MongoDBProvider {
@@ -24,10 +44,11 @@ pub struct MongoDBProvider {
     database: Database,
 }
 impl MongoDBProvider {
-    pub async fn new(adress: String, port: i32) -> MongoDBProvider {
-        let client_options = ClientOptions::parse(format!("mongodb://root:example@my-mongo:27017"))
-            .await
-            .unwrap();
+    pub async fn new(params: MongoConnectionParameters) -> MongoDBProvider {
+        //let client_options = ClientOptions::parse(format!("mongodb://root:example@my-mongo:27017"))
+        //  .await
+        //.unwrap();
+        let client_options = ClientOptions::parse(params.to_string()).await.unwrap();
         info!("Creating Mongo client with options: {:#?}", client_options);
         let client = Client::with_options(client_options).unwrap();
         let database = client.database("mydata");
@@ -80,11 +101,12 @@ impl MongoDBProviderTrait for MongoDBProvider {
 }
 pub async fn add_to_db(
     db: impl MongoDBProviderTrait + Clone + Sync,
+    mngr: impl LogMngTrait + Clone + Sync,
     data: MyData,
     token: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     debug!("insert route");
-    if (token != LoginManager::get_security_key()) {
+    if !mngr.check_token(token, format!("Add data to DB {:?}", data.clone())) {
         return Ok(create_forb_rep());
     }
     match db.insert_struct_to_db(data).await {
@@ -101,11 +123,12 @@ pub async fn add_to_db(
 
 pub async fn get_by_id(
     db: impl MongoDBProviderTrait,
+    mngr: impl LogMngTrait + Clone + Sync,
     id: String,
     token: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     debug!("get route");
-    if (token != LoginManager::get_security_key()) {
+    if !mngr.check_token(token, format!("Get data from DB by id {}", id.clone())) {
         return Ok(create_forb_rep());
     }
     match db.read_from(id).await {

@@ -3,64 +3,71 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use tracing::info;
 use warp::hyper::StatusCode;
 
 use crate::{
-    loginmanager::{self, LogMngTrait, LoginManager},
+    loginmanager::{LogMngTrait, SimplifiedUser},
     models::User,
     routes,
 };
 #[derive(Clone)]
-struct MockLogMngr {
-    pub inner: Arc<RwLock<BTreeMap<String, String>>>,
+pub struct MockLogMngr {
+    pub inner: Arc<RwLock<BTreeMap<String, User>>>,
 }
 impl LogMngTrait for MockLogMngr {
     fn check_user(&self, user: String, pass: String) -> bool {
         let tmp = self.inner.read().unwrap();
         match tmp.get(&user) {
             None => false,
-            Some(password) => &pass == password,
+            Some(user) => &pass == &user.password,
         }
     }
-    fn get_users_list(&self) -> Result<Vec<User>, diesel::result::Error> {
-        let mut res: Vec<User> = Vec::new();
+    fn get_users_list(&self) -> Result<Vec<SimplifiedUser>, diesel::result::Error> {
+        let mut res: Vec<SimplifiedUser> = Vec::new();
         let tmp = self.inner.read().unwrap();
         let iterat = tmp.iter();
-        for (log, pass) in iterat {
-            res.push(User {
+        for (log, user) in iterat {
+            res.push(SimplifiedUser {
                 login: log.to_string(),
-                password: pass.to_string(),
+                password: user.password.to_string(),
             });
         }
         Ok(res)
     }
-    fn insert_new_user(&self, new_user: User) -> bool {
+    fn insert_new_user(&self, new_user: SimplifiedUser) -> bool {
         let mut tmp = self.inner.write().unwrap();
         if tmp.contains_key(&new_user.login) {
             false
         } else {
-            tmp.insert(new_user.login, new_user.password);
+            let tmp_user = new_user.clone();
+            tmp.insert(
+                new_user.login.clone(),
+                User {
+                    login: tmp_user.login,
+                    password: tmp_user.password,
+                    token: new_user.login.clone(),
+                },
+            );
             true
         }
     }
-    fn get_by_login(&self, login: String) -> Option<User> {
+    fn get_by_login(&self, login: String) -> Option<SimplifiedUser> {
         let tmp = self.inner.read().unwrap();
         if tmp.contains_key(&login.clone()) {
             let pass = tmp.get(&login).unwrap();
-            Some(User {
+            Some(SimplifiedUser {
                 login,
-                password: pass.to_string(),
+                password: pass.password.to_string(),
             })
         } else {
             None
         }
     }
-    fn update_password(&self, new_data: User) -> bool {
+    fn update_password(&self, new_data: SimplifiedUser) -> bool {
         let mut tmp = self.inner.write().unwrap();
         if tmp.contains_key(&new_data.login) {
             let mut data = tmp.get_mut(&new_data.login).unwrap();
-            *data = new_data.password;
+            data.password = new_data.password;
             return true;
         } else {
             return false;
@@ -75,6 +82,27 @@ impl LogMngTrait for MockLogMngr {
             return false;
         }
     }
+
+    fn get_security_key(&self, username: String) -> String {
+        let tmp = self.inner.read().unwrap();
+        tmp.get(&username).unwrap().token.clone()
+    }
+
+    fn check_token(&self, token: String, req: String) -> bool {
+        true
+    }
+
+    fn get_history(
+        &self,
+        login: String,
+    ) -> Result<Vec<crate::models::History>, diesel::result::Error> {
+        let tmp = self.inner.read().unwrap();
+        if tmp.contains_key(&login) {
+            Ok(Vec::new())
+        } else {
+            Err(diesel::result::Error::NotFound)
+        }
+    }
 }
 #[tokio::test]
 async fn login_route_test() {
@@ -82,7 +110,7 @@ async fn login_route_test() {
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
-    let test_stuct = User {
+    let test_stuct = SimplifiedUser {
         login: "123".to_string(),
         password: "321".to_string(),
     };
@@ -98,12 +126,12 @@ async fn login_route_test() {
     assert_eq!(req_test.status(), StatusCode::OK);
     assert_eq!(
         req_test.headers().get("token").unwrap().to_str().unwrap(),
-        LoginManager::get_security_key()
+        mngr.get_security_key(test_stuct.login.clone())
     );
-
+    let test_login = test_stuct.login.clone();
     let req_test = warp::test::request()
         .path("/login")
-        .header("login", &test_stuct.login)
+        .header("login", &test_login)
         .header("password", "ABC")
         .reply(&data_path_routes.clone())
         .await;
@@ -116,11 +144,11 @@ async fn get_users_route_test() {
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
-    let test_stuct = User {
+    let test_stuct = SimplifiedUser {
         login: "123".to_string(),
         password: "321".to_string(),
     };
-    let test_struct = User {
+    let test_struct = SimplifiedUser {
         login: "ABC".to_string(),
         password: "CBA".to_string(),
     };
@@ -130,6 +158,7 @@ async fn get_users_route_test() {
     let req_test = warp::test::request()
         .path("/users")
         .method("GET")
+        .header("autorization", "123")
         .reply(&data_path_routes.clone())
         .await;
     assert_eq!(req_test.status(), StatusCode::OK);
@@ -147,11 +176,11 @@ async fn post_users_route_test() {
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
-    let test_stuct = User {
+    let test_stuct = SimplifiedUser {
         login: "123".to_string(),
         password: "321".to_string(),
     };
-    let test_struct = User {
+    let test_struct = SimplifiedUser {
         login: "ABC".to_string(),
         password: "CBA".to_string(),
     };
@@ -160,6 +189,7 @@ async fn post_users_route_test() {
     let req_test = warp::test::request()
         .path("/users")
         .method("POST")
+        .header("autorization", "123")
         .body(serde_json::to_string(&test_stuct).unwrap())
         .reply(&data_path_routes.clone())
         .await;
@@ -168,6 +198,7 @@ async fn post_users_route_test() {
     let req_test = warp::test::request()
         .path("/users")
         .method("POST")
+        .header("autorization", "123")
         .body(serde_json::to_string(&test_struct).unwrap())
         .reply(&data_path_routes.clone())
         .await;

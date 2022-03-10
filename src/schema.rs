@@ -1,9 +1,9 @@
 table! {
-    history (num) {
-        num -> BigInt,
+    history (id) {
+        id -> Text,
         login -> Text,
         request -> Text,
-        timestamp -> Timestamp,
+        tms -> Timestamp,
     }
 }
 
@@ -11,10 +11,8 @@ table! {
     users (login) {
         login -> Text,
         password -> Text,
+        token -> Text,
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    history,
-    users,
-);
+allow_tables_to_appear_in_same_query!(history, users,);
