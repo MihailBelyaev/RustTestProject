@@ -61,7 +61,7 @@ pub fn mongo_setup(docker: &Cli, port: u16) -> Container<Cli, GenericImage> {
 async fn mongo_insert_and_read_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27018);
-    let mongo_addr = "localhost".to_string();mongodbprovider::get_db_address_from_env().unwrap();
+    let mongo_addr = "localhost".to_string();//mongodbprovider::get_db_address_from_env().unwrap();
     let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
     let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
     let mongo_provider = MongoDBProvider::new(mongodbprovider::MongoConnectionParameters { address: mongo_addr, port: 27018, user_name: db_name, password: db_pass }).await;
@@ -87,7 +87,7 @@ async fn mongo_insert_and_read_test() {
 async fn mongo_upsert_test() {
     let docker = clients::Cli::default();
     let container = mongo_setup(&docker, 27019);
-    let mongo_addr = "localhost".to_string();mongodbprovider::get_db_address_from_env().unwrap();
+    let mongo_addr = "localhost".to_string();//mongodbprovider::get_db_address_from_env().unwrap();
     let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
     let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
     let mongo_provider = MongoDBProvider::new(mongodbprovider::MongoConnectionParameters { address: mongo_addr, port: 27019, user_name: db_name, password: db_pass }).await;
