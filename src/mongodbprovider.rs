@@ -1,4 +1,4 @@
-use std::env::{self, VarError};
+use std::{env::{self, VarError}, fmt};
 
 use crate::{loginmanager::LogMngTrait, mydatastruct::MyData};
 use async_trait::async_trait;
@@ -25,18 +25,19 @@ pub struct MongoConnectionParameters {
     pub password: String,
 }
 
-impl MongoConnectionParameters {
-    pub fn to_string(&self) -> String {
+impl fmt::Display for MongoConnectionParameters {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.user_name.is_empty() {
-            format!("mongodb://{}:{}", self.address, self.port)
+            write!(f,"mongodb://{}:{}", self.address, self.port)
         } else {
-            format!(
+            write!(f,
                 "mongodb://{}:{}@{}:{}",
                 self.user_name, self.password, self.address, self.port
             )
         }
     }
 }
+
 
 #[derive(Clone)]
 pub struct MongoDBProvider {
@@ -75,18 +76,17 @@ impl MongoDBProviderTrait for MongoDBProvider {
         let collection = self.database.collection::<MyData>("dobro");
         info!("Searching for id {}", id);
         let search_result = collection.find(doc! {"_id":id}, None).await;
-        if search_result.is_ok() {
+        if let Ok(mut cursor)=search_result {
             let mut vec_res: Vec<MyData> = Vec::new();
-            let mut cursor: mongodb::Cursor<MyData> = search_result.unwrap();
             while let Some(dt) = cursor.next().await {
-                if dt.is_ok() {
-                    vec_res.push(dt.unwrap());
+                if let Ok(elem)=dt {
+                    vec_res.push(elem);
                 } else {
                     warn!("Internal search error!");
                     return Err("Internal Error".to_string());
                 }
             }
-            if vec_res.len() > 0 {
+            if !vec_res.is_empty() {
                 info!("Got {} result", vec_res.len());
                 return Ok(vec_res);
             } else {
@@ -133,13 +133,13 @@ pub async fn get_by_id(
     }
     match db.read_from(id).await {
         Ok(res) => {
-            return Ok(reply::with_status(
+            Ok(reply::with_status(
                 reply::json(&res),
                 http::StatusCode::FOUND,
             ))
         }
         Err(err_str) => {
-            return Ok(reply::with_status(
+            Ok(reply::with_status(
                 reply::json(&err_str),
                 http::StatusCode::NOT_FOUND,
             ))
@@ -149,7 +149,7 @@ pub async fn get_by_id(
 pub fn get_db_address_from_env() -> Result<String, VarError> {
     match env::var("TEST_MONGO_ADDRESS") {
         Ok(val) => {
-            info!("Got Mongo address from enviroment{}", val.clone());
+            info!("Got Mongo address from enviroment{}", val);
             Ok(val)
         }
         Err(e) => {

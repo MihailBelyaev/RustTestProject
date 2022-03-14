@@ -19,7 +19,7 @@ impl LogMngTrait for MockLogMngr {
         let tmp = self.inner.read().unwrap();
         match tmp.get(&user) {
             None => false,
-            Some(user) => &pass == &user.password,
+            Some(user) => pass == user.password,
         }
     }
     fn get_users_list(&self) -> Result<Vec<SimplifiedUser>, diesel::result::Error> {
@@ -45,7 +45,7 @@ impl LogMngTrait for MockLogMngr {
                 User {
                     login: tmp_user.login,
                     password: tmp_user.password,
-                    token: new_user.login.clone(),
+                    token: new_user.login,
                 },
             );
             true
@@ -53,7 +53,7 @@ impl LogMngTrait for MockLogMngr {
     }
     fn get_by_login(&self, login: String) -> Option<SimplifiedUser> {
         let tmp = self.inner.read().unwrap();
-        if tmp.contains_key(&login.clone()) {
+        if tmp.contains_key(&login) {
             let pass = tmp.get(&login).unwrap();
             Some(SimplifiedUser {
                 login,
@@ -68,18 +68,18 @@ impl LogMngTrait for MockLogMngr {
         if tmp.contains_key(&new_data.login) {
             let mut data = tmp.get_mut(&new_data.login).unwrap();
             data.password = new_data.password;
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
     fn delete_user(&self, login: String) -> bool {
         let mut tmp = self.inner.write().unwrap();
         if tmp.contains_key(&login) {
             tmp.remove(&login);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
 
@@ -88,7 +88,7 @@ impl LogMngTrait for MockLogMngr {
         tmp.get(&username).unwrap().token.clone()
     }
 
-    fn check_token(&self, token: String, req: String) -> bool {
+    fn check_token(&self, _token: String, _req: String) -> bool {
         true
     }
 

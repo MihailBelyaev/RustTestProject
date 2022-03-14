@@ -53,7 +53,7 @@ impl LogMngTrait for LoginManager {
             .db_pool
             .get()
             .unwrap_or_else(|_| panic!("Error connecting to DB"));
-        match User::by_login(user.clone(), &conn) {
+        match User::by_login(user, &conn) {
             Some(res) => res.password == pass,
             None => false,
         }
@@ -122,7 +122,7 @@ impl LogMngTrait for LoginManager {
             .get()
             .unwrap_or_else(|_| panic!("Error connecting to DB"));
         let tmp_usr = User::by_login(username, &conn).unwrap();
-        return tmp_usr.token;
+        tmp_usr.token
     }
     fn check_token(&self, token: String, req: String) -> bool {
         let conn = self
@@ -130,18 +130,17 @@ impl LogMngTrait for LoginManager {
             .get()
             .unwrap_or_else(|_| panic!("Error connecting to DB"));
         let res = User::by_token(token, &conn);
-        if res.is_some() {
-            let res = res.unwrap();
+        if let Some(val)=res {
             let elem = History {
                 id: Uuid::new_v4().to_string(),
-                login: res.login,
+                login: val.login,
                 request: req,
                 tms: chrono::Utc::now().naive_utc(),
             };
             History::add_element(&conn, elem);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
     fn get_history(&self, login: String) -> Result<Vec<History>, diesel::result::Error> {
@@ -160,13 +159,13 @@ pub async fn check_login_data(
 ) -> Result<impl warp::Reply, Rejection> {
     if mngr.check_user(log.clone(), pas.clone()) {
         info!("Got user {}:{}", log, pas);
-        return Ok(warp::reply::with_status(
+        Ok(warp::reply::with_status(
             warp::reply::with_header(warp::reply(), "token", mngr.get_security_key(log)),
             http::StatusCode::OK,
-        ));
+        ))
     } else {
         info!("No user {}:{}", log, pas);
-        return Err(warp::reject());
+        Err(warp::reject())
     }
 }
 
@@ -184,14 +183,14 @@ pub async fn get_users_list(
     let res = mngr.get_users_list();
     match res {
         Ok(users_vec) => {
-            return Ok(warp::reply::with_status(
+            Ok(warp::reply::with_status(
                 warp::reply::json(&users_vec),
                 http::StatusCode::OK,
             ))
         }
         Err(err) => {
             warn!("Error while getting user list {}", err);
-            return Err(warp::reject());
+            Err(warp::reject())
         }
     }
 }
@@ -201,19 +200,19 @@ pub async fn insert_user(
     new_user: SimplifiedUser,
     token: String,
 ) -> Result<impl warp::Reply, Rejection> {
-    if !mngr.check_token(token, format!("Insert user {:?}", new_user.clone())) {
+    if !mngr.check_token(token, format!("Insert user {:?}", new_user)) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Wrong token".to_string()),
             http::StatusCode::FORBIDDEN,
         ));
     }
     if mngr.insert_new_user(new_user) {
-        return Ok(warp::reply::with_status(
+        Ok(warp::reply::with_status(
             warp::reply::json(&"Success!".to_string()),
             http::StatusCode::OK,
-        ));
+        ))
     } else {
-        return Err(warp::reject());
+        Err(warp::reject())
     }
 }
 
@@ -222,7 +221,7 @@ pub async fn get_certain_user(
     user_id: String,
     token: String,
 ) -> Result<impl warp::Reply, Rejection> {
-    if !mngr.check_token(token, format!("Get user with id{}", user_id.clone())) {
+    if !mngr.check_token(token, format!("Get user with id{}", user_id)) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Wrong token".to_string()),
             http::StatusCode::FORBIDDEN,
@@ -231,12 +230,12 @@ pub async fn get_certain_user(
 
     let res = mngr.get_by_login(user_id);
     if res.is_some() {
-        return Ok(warp::reply::with_status(
+        Ok(warp::reply::with_status(
             warp::reply::json(&res.unwrap()),
             http::StatusCode::OK,
-        ));
+        ))
     } else {
-        return Err(warp::reject());
+        Err(warp::reject())
     }
 }
 
@@ -250,8 +249,8 @@ pub async fn update_certain_user(
         token,
         format!(
             "Update user {} with {:?}",
-            user_id.clone(),
-            new_data.clone()
+            user_id,
+            new_data
         ),
     ) {
         return Ok(warp::reply::with_status(
@@ -261,20 +260,19 @@ pub async fn update_certain_user(
     }
 
     if new_data.login != user_id {
-        return Ok(warp::reply::with_status(
+        Ok(warp::reply::with_status(
             warp::reply::json(&"login mismatch!".to_string()),
             http::StatusCode::BAD_REQUEST,
-        ));
-    } else {
-        if mngr.update_password(new_data) {
-            return Ok(warp::reply::with_status(
+        ))
+    } else if mngr.update_password(new_data) {
+            Ok(warp::reply::with_status(
                 warp::reply::json(&"Success!".to_string()),
                 http::StatusCode::OK,
-            ));
+            ))
         } else {
-            return Err(warp::reject());
+            Err(warp::reject())
         }
-    }
+    
 }
 
 pub async fn delete_certain_user(
@@ -282,7 +280,7 @@ pub async fn delete_certain_user(
     user_id: String,
     token: String,
 ) -> Result<impl warp::Reply, Rejection> {
-    if !mngr.check_token(token, format!("Delete user {:?}", user_id.clone())) {
+    if !mngr.check_token(token, format!("Delete user {:?}", user_id)) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Wrong token".to_string()),
             http::StatusCode::FORBIDDEN,
@@ -290,12 +288,12 @@ pub async fn delete_certain_user(
     }
 
     if mngr.delete_user(user_id) {
-        return Ok(warp::reply::with_status(
+        Ok(warp::reply::with_status(
             warp::reply::json(&"Success!".to_string()),
             http::StatusCode::NO_CONTENT,
-        ));
+        ))
     } else {
-        return Err(warp::reject());
+        Err(warp::reject())
     }
 }
 
@@ -305,11 +303,11 @@ pub async fn get_history_for_user(
 ) -> Result<impl warp::Reply, Rejection> {
     match mngr.get_history(user_id) {
         Ok(res) => {
-            return Ok(warp::reply::with_status(
+            Ok(warp::reply::with_status(
                 warp::reply::json(&res),
                 http::StatusCode::OK,
-            ));
+            ))
         }
-        Err(_) => return Err(warp::reject()),
+        Err(_) =>  Err(warp::reject()),
     }
 }

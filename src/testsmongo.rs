@@ -1,11 +1,9 @@
 use std::collections::BTreeMap;
-use std::env;
 use std::sync::Arc;
 use std::sync::RwLock;
 
 use crate::loginmanager::LogMngTrait;
 use crate::loginmanager::SimplifiedUser;
-use crate::mongodbprovider;
 use crate::mongodbprovider::*;
 use crate::mydatastruct;
 use crate::mydatastruct::*;
@@ -46,7 +44,7 @@ impl MongoDBProviderTrait for FakeMongoDbProvider<'_> {
 }
 
 mod tests {
-    use testcontainers::{clients, Docker};
+    use testcontainers::clients;
 
     use crate::mydatastruct;
 
@@ -64,11 +62,11 @@ mod tests {
             mydatastruct::Sex::Female,
         );
         let insert_res = fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
-        assert_eq!(insert_res.is_ok(), true);
+        assert!(insert_res.is_ok());
         let second_insert = fake_mongo.insert_struct_to_db(test_stuct.clone()).await;
-        assert_eq!(second_insert.is_err(), true);
+        assert!(second_insert.is_err());
         let read_res_vec = fake_mongo.read_from("test".to_string()).await;
-        assert_eq!(read_res_vec.is_ok(), true);
+        assert!(read_res_vec.is_ok());
         let vec_unw = read_res_vec.unwrap();
         assert_eq!(vec_unw.len(), 1);
         assert_eq!(vec_unw[0], test_stuct);
@@ -171,7 +169,7 @@ async fn get_route_test() {
         .provider
         .insert_struct_to_db(test_stuct.clone())
         .await;
-    assert_eq!(_insert_res.is_ok(), true);
+    assert!(_insert_res.is_ok());
 
     let req_test = warp::test::request()
         .path("/data/test")

@@ -47,14 +47,10 @@ impl User {
         let res = diesel::update(dsl_filter)
             .set(schema::users::password.eq(new_user.password))
             .execute(conn);
-        if res.is_ok() {
-            if res.unwrap() == 0 {
-                return false;
-            } else {
-                return true;
-            }
+        if let Ok(result)=res {
+            result != 0 
         } else {
-            return false;
+            false
         }
     }
 }
