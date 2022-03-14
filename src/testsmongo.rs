@@ -13,7 +13,7 @@ use async_trait::async_trait;
 
 struct FakeMongoDbProvider<'a> {
     provider: MongoDBProvider,
-    node: Arc<Container<'a, Cli, GenericImage>>,
+    _node: Arc<Container<'a, Cli, GenericImage>>,
 }
 
 impl FakeMongoDbProvider<'_> {
@@ -29,7 +29,7 @@ impl FakeMongoDbProvider<'_> {
         let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
         let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
         let provider = MongoDBProvider::new(MongoConnectionParameters{ address: mon_addr, port, user_name: db_name, password: db_pass }).await;
-        FakeMongoDbProvider { provider, node }
+        FakeMongoDbProvider { provider, _node:node }
     }
 }
 

@@ -41,7 +41,7 @@ impl fmt::Display for MongoConnectionParameters {
 
 #[derive(Clone)]
 pub struct MongoDBProvider {
-    client: Client,
+    _client: Client,
     database: Database,
 }
 impl MongoDBProvider {
@@ -53,7 +53,7 @@ impl MongoDBProvider {
         info!("Creating Mongo client with options: {:#?}", client_options);
         let client = Client::with_options(client_options).unwrap();
         let database = client.database("mydata");
-        MongoDBProvider { client, database }
+        MongoDBProvider { _client:client, database }
     }
 }
 #[async_trait]

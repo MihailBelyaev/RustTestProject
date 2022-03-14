@@ -2,9 +2,9 @@ use std::env;
 
 use tracing::info;
 use warp::Filter;
-use RustTestProject::loginmanager::LoginManager;
-use RustTestProject::mongodbprovider::{self, MongoConnectionParameters, MongoDBProvider};
-use RustTestProject::routes::{
+use rust_test_project::loginmanager::LoginManager;
+use rust_test_project::mongodbprovider::{self, MongoConnectionParameters, MongoDBProvider};
+use rust_test_project::routes::{
     delete_certain_user, get_certain_user, get_filter_fcn, get_history_fcn, get_users_fcn,
     insert_filter_fcn, login_filter_fcn, post_user_fcn, update_certain_user,
 };
