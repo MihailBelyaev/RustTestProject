@@ -47,8 +47,8 @@ impl User {
         let res = diesel::update(dsl_filter)
             .set(schema::users::password.eq(new_user.password))
             .execute(conn);
-        if let Ok(result)=res {
-            result != 0 
+        if let Ok(result) = res {
+            result != 0
         } else {
             false
         }

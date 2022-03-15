@@ -106,7 +106,7 @@ impl LogMngTrait for MockLogMngr {
 }
 #[tokio::test]
 async fn login_route_test() {
-    tracing_subscriber::fmt().try_init().unwrap_or_else(|_|{});
+    tracing_subscriber::fmt().try_init().unwrap_or_else(|_| {});
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
@@ -140,7 +140,7 @@ async fn login_route_test() {
 
 #[tokio::test]
 async fn get_users_route_test() {
-    tracing_subscriber::fmt().try_init().unwrap_or_else(|_|{});
+    tracing_subscriber::fmt().try_init().unwrap_or_else(|_| {});
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
@@ -172,7 +172,7 @@ async fn get_users_route_test() {
 
 #[tokio::test]
 async fn post_users_route_test() {
-    tracing_subscriber::fmt().try_init().unwrap_or_else(|_|{});
+    tracing_subscriber::fmt().try_init().unwrap_or_else(|_| {});
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
