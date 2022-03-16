@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run coverage
-      run: ./tools/coberage.sh
+        run: ./tools/coverage.sh
   build:
 
     runs-on: ubuntu-latest
