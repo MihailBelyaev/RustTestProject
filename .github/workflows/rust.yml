@@ -20,7 +20,7 @@ jobs:
     - name: Run login tests
       run: cargo test testlogin
   coverage:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Run coverage
