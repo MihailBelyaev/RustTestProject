@@ -5,8 +5,8 @@ set -euo pipefail
 
 export RUSTFLAGS="-Zinstrument-coverage"
 export LLVM_PROFILE_FILE="coverage-%p-%m.profraw"
-rustup default nightly-2022-01-21
-cargo +nightly-2022-01-21 install grcov
+rustup default nightly
+cargo +nightly install grcov
 rustup component add llvm-tools-preview
 brew install lcov
 
