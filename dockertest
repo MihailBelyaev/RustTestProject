@@ -1,0 +1,13 @@
+FROM rustlang/rust:nightly
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY tools ./tools 
+ENV RUSTFLAGS="-Zinstrument-coverage"
+ENV LLVM_PROFILE_FILE="coverage-%p-%m.profraw"
+RUN rustup default nightly-2021-10-21
+RUN cargo +nightly-2021-10-21 install grcov
+RUN rustup component add llvm-tools-preview
+RUN apt update && apt install lcov -y
+
+RUN cargo test --all --tests --no-fail-fast -- -Z unstable-options
+RUN cargo build --release --target-dir /usr/local/cargo/bin/RustTestProject/
