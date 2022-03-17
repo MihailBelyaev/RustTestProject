@@ -130,7 +130,7 @@ impl LogMngTrait for LoginManager {
             .get()
             .unwrap_or_else(|_| panic!("Error connecting to DB"));
         let res = User::by_token(token, &conn);
-        if let Some(val)=res {
+        if let Some(val) = res {
             let elem = History {
                 id: Uuid::new_v4().to_string(),
                 login: val.login,
@@ -182,12 +182,10 @@ pub async fn get_users_list(
 
     let res = mngr.get_users_list();
     match res {
-        Ok(users_vec) => {
-            Ok(warp::reply::with_status(
-                warp::reply::json(&users_vec),
-                http::StatusCode::OK,
-            ))
-        }
+        Ok(users_vec) => Ok(warp::reply::with_status(
+            warp::reply::json(&users_vec),
+            http::StatusCode::OK,
+        )),
         Err(err) => {
             warn!("Error while getting user list {}", err);
             Err(warp::reject())
@@ -247,11 +245,7 @@ pub async fn update_certain_user(
 ) -> Result<impl warp::Reply, Rejection> {
     if !mngr.check_token(
         token,
-        format!(
-            "Update user {} with {:?}",
-            user_id,
-            new_data
-        ),
+        format!("Update user {} with {:?}", user_id, new_data),
     ) {
         return Ok(warp::reply::with_status(
             warp::reply::json(&"Wrong token".to_string()),
@@ -265,14 +259,13 @@ pub async fn update_certain_user(
             http::StatusCode::BAD_REQUEST,
         ))
     } else if mngr.update_password(new_data) {
-            Ok(warp::reply::with_status(
-                warp::reply::json(&"Success!".to_string()),
-                http::StatusCode::OK,
-            ))
-        } else {
-            Err(warp::reject())
-        }
-    
+        Ok(warp::reply::with_status(
+            warp::reply::json(&"Success!".to_string()),
+            http::StatusCode::OK,
+        ))
+    } else {
+        Err(warp::reject())
+    }
 }
 
 pub async fn delete_certain_user(
@@ -302,12 +295,10 @@ pub async fn get_history_for_user(
     user_id: String,
 ) -> Result<impl warp::Reply, Rejection> {
     match mngr.get_history(user_id) {
-        Ok(res) => {
-            Ok(warp::reply::with_status(
-                warp::reply::json(&res),
-                http::StatusCode::OK,
-            ))
-        }
-        Err(_) =>  Err(warp::reject()),
+        Ok(res) => Ok(warp::reply::with_status(
+            warp::reply::json(&res),
+            http::StatusCode::OK,
+        )),
+        Err(_) => Err(warp::reject()),
     }
 }

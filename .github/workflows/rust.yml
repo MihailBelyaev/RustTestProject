@@ -9,6 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +20,29 @@ jobs:
       run: cargo test testsmongo -- --test-threads=1
     - name: Run login tests
       run: cargo test testlogin
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run coverage
+        run: ./tools/coverage.sh
+      - name: Archive code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: |
+           ./coverage/index.html
+           ./coverage/src/*html
+      - name: Archive code coverage badge
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-badge
+          path: ./coverage/badges/flat.svg
+      - name: Push grcov results to Coveralls via GitHub Action
+        uses: coverallsapp/github-action@v1.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "coverage.lcov"
   build:
 
     runs-on: ubuntu-latest

@@ -19,17 +19,26 @@ struct FakeMongoDbProvider<'a> {
 impl FakeMongoDbProvider<'_> {
     pub async fn new(docker: &Cli, port: i32) -> FakeMongoDbProvider<'_> {
         let run_arg = RunArgs::default()
-            .with_name("mongo_test")
+            .with_name(format!("mongo_test_{}",port))
             .with_mapped_port((port as u16, 27017));
         let generic_mongodb = GenericImage::new("mongo:5.0")
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
 
         let node = Arc::new(docker.run_with_args(generic_mongodb, run_arg));
-        let mon_addr = "localhost".to_string();//mongodbprovider::get_db_address_from_env().unwrap();
-        let db_name = "".to_string();//env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
-        let db_pass = "".to_string();//env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
-        let provider = MongoDBProvider::new(MongoConnectionParameters{ address: mon_addr, port, user_name: db_name, password: db_pass }).await;
-        FakeMongoDbProvider { provider, _node:node }
+        let mon_addr = "localhost".to_string(); //mongodbprovider::get_db_address_from_env().unwrap();
+        let db_name = "".to_string(); //env::var("MONGO_INITDB_ROOT_USERNAME").unwrap_or_else(|_| "".to_string());
+        let db_pass = "".to_string(); //env::var("MONGO_INITDB_ROOT_PASSWORD").unwrap_or_else(|_| "".to_string());
+        let provider = MongoDBProvider::new(MongoConnectionParameters {
+            address: mon_addr,
+            port,
+            user_name: db_name,
+            password: db_pass,
+        })
+        .await;
+        FakeMongoDbProvider {
+            provider,
+            _node: node,
+        }
     }
 }
 
@@ -54,7 +63,7 @@ mod tests {
     #[tokio::test]
     async fn mongo_add_and_read_test() {
         let docker = clients::Cli::default();
-        let fake_mongo = FakeMongoDbProvider::new(&docker, 27017).await;
+        let fake_mongo = FakeMongoDbProvider::new(&docker, 27020).await;
         let test_stuct = mydatastruct::create_my_struct(
             "test".to_string(),
             "AAA".to_string(),
@@ -86,7 +95,7 @@ use warp::Filter;
 #[tokio::test]
 async fn insert_route_test() {
     let docker = clients::Cli::default();
-    let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
+    let db_provider = FakeMongoDbProvider::new(&docker, 27021).await;
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
@@ -137,7 +146,7 @@ async fn insert_route_test() {
 #[tokio::test]
 async fn get_route_test() {
     let docker = clients::Cli::default();
-    let db_provider = FakeMongoDbProvider::new(&docker, 27017).await;
+    let db_provider = FakeMongoDbProvider::new(&docker, 27022).await;
     let mngr = MockLogMngr {
         inner: Arc::new(RwLock::new(BTreeMap::new())),
     };
