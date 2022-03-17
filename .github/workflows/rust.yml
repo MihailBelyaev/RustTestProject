@@ -38,6 +38,11 @@ jobs:
         with:
           name: coverage-badge
           path: ./coverage/badges/flat.svg
+      - name: Push grcov results to Coveralls via GitHub Action
+        uses: coverallsapp/github-action@v1.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "coverage.lcov"
   build:
 
     runs-on: ubuntu-latest
