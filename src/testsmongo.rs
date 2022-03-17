@@ -19,7 +19,7 @@ struct FakeMongoDbProvider<'a> {
 impl FakeMongoDbProvider<'_> {
     pub async fn new(docker: &Cli, port: i32) -> FakeMongoDbProvider<'_> {
         let run_arg = RunArgs::default()
-            .with_name(format!("mongo_test_{}",port))
+            .with_name(format!("mongo_test_{}", port))
             .with_mapped_port((port as u16, 27017));
         let generic_mongodb = GenericImage::new("mongo:5.0")
             .with_wait_for(WaitFor::message_on_stdout("LogicalSessionCacheRefresh"));
