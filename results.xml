@@ -1,0 +1,257 @@
+{ "type": "suite", "event": "started", "test_count": 11 }
+{ "type": "test", "event": "started", "name": "my_tests::mongo_insert_and_read_test" }
+{ "type": "test", "event": "started", "name": "my_tests::mongo_upsert_test" }
+{ "type": "test", "event": "started", "name": "my_tests::rest_get_read_data_with_data_contains_test" }
+{ "type": "test", "event": "started", "name": "my_tests::rest_get_read_data_without_data_contains_test" }
+{ "type": "test", "event": "started", "name": "my_tests::rest_post_insert_data_test" }
+{ "type": "test", "event": "started", "name": "testlogin::get_users_route_test" }
+{ "type": "test", "event": "started", "name": "testlogin::login_route_test" }
+{ "type": "test", "event": "started", "name": "testlogin::post_users_route_test" }
+{ "type": "test", "event": "started", "name": "testsmongo::get_route_test" }
+{ "type": "test", "event": "started", "name": "testsmongo::insert_route_test" }
+{ "type": "test", "event": "started", "name": "testsmongo::tests::mongo_add_and_read_test" }
+{ "type": "test", "name": "my_tests::rest_get_read_data_without_data_contains_test", "event": "ok" }
+{ "type": "test", "name": "my_tests::rest_post_insert_data_test", "event": "ok" }
+{ "type": "test", "name": "my_tests::rest_get_read_data_with_data_contains_test", "event": "ok" }
+[2m2022-03-17T12:47:21.453393Z[0m [32m INFO[0m [2mrust_test_project::loginmanager[0m[2m:[0m Got user 123:321
+{ "type": "test", "name": "testlogin::get_users_route_test", "event": "ok" }
+[2m2022-03-17T12:47:21.453616Z[0m [32m INFO[0m [2mrust_test_project::loginmanager[0m[2m:[0m No user 123:ABC
+{ "type": "test", "name": "testlogin::post_users_route_test", "event": "ok" }
+{ "type": "test", "name": "testlogin::login_route_test", "event": "ok" }
+[2m2022-03-17T12:47:23.414443Z[0m [32m INFO[0m [2mtestcontainers::core::wait_for_message[0m[2m:[0m Found message after comparing 35 lines    
+[2m2022-03-17T12:47:23.414770Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Creating Mongo client with options: ClientOptions {
+    hosts: [
+        Tcp {
+            host: "localhost",
+            port: Some(
+                27022,
+            ),
+        },
+    ],
+    app_name: None,
+    compressors: None,
+    connect_timeout: None,
+    credential: None,
+    direct_connection: None,
+    driver_info: None,
+    heartbeat_freq: None,
+    load_balanced: None,
+    local_threshold: None,
+    max_idle_time: None,
+    max_pool_size: None,
+    min_pool_size: None,
+    read_concern: None,
+    repl_set_name: None,
+    retry_reads: None,
+    retry_writes: None,
+    selection_criteria: None,
+    server_api: None,
+    server_selection_timeout: None,
+    default_database: None,
+    tls: None,
+    write_concern: None,
+}
+[2m2022-03-17T12:47:23.488846Z[0m [32m INFO[0m [2mtestcontainers::core::wait_for_message[0m[2m:[0m Found message after comparing 35 lines    
+[2m2022-03-17T12:47:23.489001Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Creating Mongo client with options: ClientOptions {
+    hosts: [
+        Tcp {
+            host: "localhost",
+            port: Some(
+                27018,
+            ),
+        },
+    ],
+    app_name: None,
+    compressors: None,
+    connect_timeout: None,
+    credential: None,
+    direct_connection: None,
+    driver_info: None,
+    heartbeat_freq: None,
+    load_balanced: None,
+    local_threshold: None,
+    max_idle_time: None,
+    max_pool_size: None,
+    min_pool_size: None,
+    read_concern: None,
+    repl_set_name: None,
+    retry_reads: None,
+    retry_writes: None,
+    selection_criteria: None,
+    server_api: None,
+    server_selection_timeout: None,
+    default_database: None,
+    tls: None,
+    write_concern: None,
+}
+[2m2022-03-17T12:47:23.547894Z[0m [32m INFO[0m [2mtestcontainers::core::wait_for_message[0m[2m:[0m Found message after comparing 35 lines    
+[2m2022-03-17T12:47:23.548061Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Creating Mongo client with options: ClientOptions {
+    hosts: [
+        Tcp {
+            host: "localhost",
+            port: Some(
+                27020,
+            ),
+        },
+    ],
+    app_name: None,
+    compressors: None,
+    connect_timeout: None,
+    credential: None,
+    direct_connection: None,
+    driver_info: None,
+    heartbeat_freq: None,
+    load_balanced: None,
+    local_threshold: None,
+    max_idle_time: None,
+    max_pool_size: None,
+    min_pool_size: None,
+    read_concern: None,
+    repl_set_name: None,
+    retry_reads: None,
+    retry_writes: None,
+    selection_criteria: None,
+    server_api: None,
+    server_selection_timeout: None,
+    default_database: None,
+    tls: None,
+    write_concern: None,
+}
+[2m2022-03-17T12:47:23.557722Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.557722Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.557813Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Searching for id test
+[2m2022-03-17T12:47:23.574589Z[0m [33m WARN[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Not Found!    
+[2m2022-03-17T12:47:23.574694Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.590385Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Successful insertion with id "test"
+[2m2022-03-17T12:47:23.590455Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.591519Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Successful insertion with id "test"
+[2m2022-03-17T12:47:23.591570Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Searching for id test
+[2m2022-03-17T12:47:23.598878Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Got 1 result
+[2m2022-03-17T12:47:23.599801Z[0m [33m WARN[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Insertion failed due to An error occurred when trying to execute a write operation: WriteError(WriteError { code: 11000, code_name: None, message: "E11000 duplicate key error collection: mydata.dobro index: _id_ dup key: { _id: \"test\" }", details: None })    
+[2m2022-03-17T12:47:23.599881Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Searching for id test
+[2m2022-03-17T12:47:23.599992Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Successful insertion with id "test"
+[2m2022-03-17T12:47:23.600122Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Searching for id test
+[2m2022-03-17T12:47:23.602097Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Got 1 result
+[2m2022-03-17T12:47:23.602097Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Got 1 result
+[2m2022-03-17T12:47:23.702926Z[0m [32m INFO[0m [2mtestcontainers::core::wait_for_message[0m[2m:[0m Found message after comparing 35 lines    
+[2m2022-03-17T12:47:23.703096Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Creating Mongo client with options: ClientOptions {
+    hosts: [
+        Tcp {
+            host: "localhost",
+            port: Some(
+                27021,
+            ),
+        },
+    ],
+    app_name: None,
+    compressors: None,
+    connect_timeout: None,
+    credential: None,
+    direct_connection: None,
+    driver_info: None,
+    heartbeat_freq: None,
+    load_balanced: None,
+    local_threshold: None,
+    max_idle_time: None,
+    max_pool_size: None,
+    min_pool_size: None,
+    read_concern: None,
+    repl_set_name: None,
+    retry_reads: None,
+    retry_writes: None,
+    selection_criteria: None,
+    server_api: None,
+    server_selection_timeout: None,
+    default_database: None,
+    tls: None,
+    write_concern: None,
+}
+[2m2022-03-17T12:47:23.703732Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.728947Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Successful insertion with id "test"
+[2m2022-03-17T12:47:23.729174Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.732040Z[0m [33m WARN[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Insertion failed due to An error occurred when trying to execute a write operation: WriteError(WriteError { code: 11000, code_name: None, message: "E11000 duplicate key error collection: mydata.dobro index: _id_ dup key: { _id: \"test\" }", details: None })    
+[2m2022-03-17T12:47:23.756381Z[0m [32m INFO[0m [2mtestcontainers::core::wait_for_message[0m[2m:[0m Found message after comparing 35 lines    
+[2m2022-03-17T12:47:23.756578Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Creating Mongo client with options: ClientOptions {
+    hosts: [
+        Tcp {
+            host: "localhost",
+            port: Some(
+                27019,
+            ),
+        },
+    ],
+    app_name: None,
+    compressors: None,
+    connect_timeout: None,
+    credential: None,
+    direct_connection: None,
+    driver_info: None,
+    heartbeat_freq: None,
+    load_balanced: None,
+    local_threshold: None,
+    max_idle_time: None,
+    max_pool_size: None,
+    min_pool_size: None,
+    read_concern: None,
+    repl_set_name: None,
+    retry_reads: None,
+    retry_writes: None,
+    selection_criteria: None,
+    server_api: None,
+    server_selection_timeout: None,
+    default_database: None,
+    tls: None,
+    write_concern: None,
+}
+[2m2022-03-17T12:47:23.757074Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.784190Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Successful insertion with id "test"
+[2m2022-03-17T12:47:23.784252Z[0m [32m INFO[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Inserting struct to DB: MyData {
+    id: "test",
+    first_name: "AAA",
+    age: 53,
+    sex: Female,
+}
+[2m2022-03-17T12:47:23.792534Z[0m [33m WARN[0m [2mrust_test_project::mongodbprovider[0m[2m:[0m Insertion failed due to An error occurred when trying to execute a write operation: WriteError(WriteError { code: 11000, code_name: None, message: "E11000 duplicate key error collection: mydata.dobro index: _id_ dup key: { _id: \"test\" }", details: None })    
+{ "type": "test", "name": "my_tests::mongo_insert_and_read_test", "event": "ok" }
+{ "type": "test", "name": "testsmongo::tests::mongo_add_and_read_test", "event": "ok" }
+{ "type": "test", "name": "testsmongo::insert_route_test", "event": "ok" }
+{ "type": "test", "name": "testsmongo::get_route_test", "event": "ok" }
+{ "type": "test", "name": "my_tests::mongo_upsert_test", "event": "ok" }
+{ "type": "suite", "event": "ok", "passed": 11, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 2.8864681 }
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 0.00005732 }

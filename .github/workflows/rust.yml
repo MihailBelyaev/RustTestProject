@@ -45,11 +45,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
-      run: cargo test my_test
-    - name: Run mongo tests
-      run: cargo test testsmongo -- --test-threads=1
-    - name: Run login tests
-      run: cargo test testlogin
+      run: ./tools/nightlytests.sh   
+    - name: Upload test results
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      with:
+          check_name: Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: results.xml
   coverage:
     runs-on: ubuntu-latest
     steps:
