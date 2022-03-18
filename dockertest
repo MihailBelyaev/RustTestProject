@@ -1,9 +1,15 @@
-FROM rustlang/rust:nightly
+FROM ubuntu:latest
+RUN apt update && apt install curl -y
+RUN apt-get install build-essential -y
+RUN apt install gcc-multilib -y
+RUN apt update && apt install sqlite3 -y
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY tools ./tools 
 ENV RUSTFLAGS="-Zinstrument-coverage"
 ENV LLVM_PROFILE_FILE="coverage-%p-%m.profraw"
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup default nightly-2021-10-21
 RUN cargo +nightly-2021-10-21 install grcov
 RUN rustup component add llvm-tools-preview
