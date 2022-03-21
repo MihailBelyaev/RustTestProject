@@ -27,6 +27,7 @@ jobs:
 
   clippy:
     name: Clippy
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -41,6 +42,7 @@ jobs:
           args: --all-features
           name: Clippy Output
   test:
+    needs: [fmt,clippy]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -53,6 +55,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: results.xml
   coverage:
+    needs: [fmt,clippy]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -76,7 +79,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: "coverage.lcov"
   build:
-
+    needs: [fmt,clippy,test]
     runs-on: ubuntu-latest
 
     steps:
