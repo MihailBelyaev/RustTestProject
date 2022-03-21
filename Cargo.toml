@@ -22,3 +22,7 @@ diesel_migrations = "1.4.0"
 dotenv = "0.15.0"
 uuid = "0.8.2"
 chrono = {version="0.4.19",features = ["serde"]}
+
+[features]
+integration_tests = []
+integration_tests_publish_ports = ["integration_tests"]
