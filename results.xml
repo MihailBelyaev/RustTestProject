@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite id="0" name="cargo test #0" package="testsuite/cargo test #0" tests="11" errors="0" failures="0" hostname="localhost" timestamp="2022-03-17T13:01:24.490957+00:00" time="0">
+    <testcase name="rest_get_read_data_without_data_contains_test" classname="my_tests" time="0" />
+    <testcase name="rest_post_insert_data_test" classname="my_tests" time="0" />
+    <testcase name="rest_get_read_data_with_data_contains_test" classname="my_tests" time="0" />
+    <testcase name="get_users_route_test" classname="testlogin" time="0" />
+    <testcase name="post_users_route_test" classname="testlogin" time="0" />
+    <testcase name="login_route_test" classname="testlogin" time="0" />
+    <testcase name="get_route_test" classname="testsmongo" time="0" />
+    <testcase name="insert_route_test" classname="testsmongo" time="0" />
+    <testcase name="mongo_add_and_read_test" classname="testsmongo::tests" time="0" />
+    <testcase name="mongo_insert_and_read_test" classname="my_tests" time="0" />
+    <testcase name="mongo_upsert_test" classname="my_tests" time="0" />
+  </testsuite>
+  <testsuite id="1" name="cargo test #1" package="testsuite/cargo test #1" tests="0" errors="0" failures="0" hostname="localhost" timestamp="2022-03-17T13:01:24.490957+00:00" time="0" />
+</testsuites>
