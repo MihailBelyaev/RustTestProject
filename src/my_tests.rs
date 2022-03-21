@@ -1,3 +1,5 @@
+#[cfg(all(test, feature = "integration_tests"))]
+mod tests {
 use crate::loginmanager::{LogMngTrait, SimplifiedUser};
 use crate::mongodbprovider::{self, MongoDBProvider, MongoDBProviderTrait};
 use crate::mydatastruct;
@@ -207,3 +209,4 @@ async fn rest_get_read_data_with_data_contains_test() {
 
 #[tokio::test]
 async fn rest_get_read_data_without_data_contains_test() {}
+}
