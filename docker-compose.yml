@@ -1,6 +1,5 @@
 version: '3'
 services:
-
   test-mongo:
     image: "mongo:5.0"
     container_name: my-mongo
@@ -11,9 +10,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
   test-app:
     depends_on:
-      - test_mongo
+      - test-mongo
     environment:
-      - TEST_MONGO_ADDRESS=value
+      - TEST_MONGO_ADDRESS=my-mongo
     build: .
     container_name: test-app
     ports:
