@@ -16,16 +16,4 @@ spec:
     - name: MONGO_INITDB_ROOT_PASSWORD
       value: example
 
-  - name: myapp-container
-    image: rusttest:runtime
-    ports:
-    - containerPort: 3030
-    env:
-    - name: MONGO_INITDB_ROOT_USERNAME
-      value: root
-    - name: MONGO_INITDB_ROOT_PASSWORD
-      value: example
-    - name: DATABASE_URL
-      value: users.db
-    - name: TEST_MONGO_ADDRESS
-      value: my-mongo
+  
