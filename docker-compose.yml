@@ -8,9 +8,19 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+  test-postgres:
+    image: "postgres:9.6.5"
+    container_name: postgres-db
+    networks:
+      - backend
+    environment:
+        POSTGRES_DB: postgres_db
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: mysecretpassword
   test-app:
     depends_on:
       - test-mongo
+      - test-postgres
     environment:
       - TEST_MONGO_ADDRESS=my-mongo
     build: .

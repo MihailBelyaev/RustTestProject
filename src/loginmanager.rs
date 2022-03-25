@@ -1,6 +1,6 @@
 use diesel::{
+    pg::PgConnection,
     r2d2::{ConnectionManager, Pool},
-    sqlite::SqliteConnection,
     ExpressionMethods, QueryDsl, RunQueryDsl,
 };
 use serde::{Deserialize, Serialize};
@@ -34,14 +34,14 @@ pub trait LogMngTrait: Send {
 
 #[derive(Clone)]
 pub struct LoginManager {
-    db_pool: Pool<ConnectionManager<SqliteConnection>>,
+    db_pool: Pool<ConnectionManager<PgConnection>>,
 }
 
 impl LoginManager {
     pub fn new(db_url: String) -> Self {
         let pool = Pool::builder()
             .max_size(15)
-            .build(ConnectionManager::<SqliteConnection>::new(db_url))
+            .build(ConnectionManager::<PgConnection>::new(db_url))
             .unwrap();
         Self { db_pool: pool }
     }

@@ -24,10 +24,10 @@ spec:
         - name: DATABASE_URL
           value: /usr/users.db
         - name: TEST_MONGO_ADDRESS
-          value: my-mongo
+          value: mongo-pod
         volumeMounts:               # 3
         - name: sqlite-volume       # 3.a
-          mountPath: /usr/users.db        # 3.b
+          mountPath: /usr        # 3.b
       volumes:
       - name: sqlite-volume         # 2
         persistentVolumeClaim:
