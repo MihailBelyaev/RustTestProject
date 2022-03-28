@@ -1,19 +1,35 @@
 apiVersion: v1
-kind: Pod
+kind: Service
 metadata:
-  name: mongo-pod
-  labels:
-    purpose: mongo_db
+  name: mongo
 spec:
-  containers:
-  - name: mongo-container
-    image: mongo:5.0
-    ports:
-    - containerPort: 27015
-    env:
-    - name: MONGO_INITDB_ROOT_USERNAME
-      value: root
-    - name: MONGO_INITDB_ROOT_PASSWORD
-      value: example
+  ports:
+  - port: 27015
+  selector:
+    app: mongo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:5.0
+        ports:
+        - containerPort: 27015
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: root
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: example
 
   

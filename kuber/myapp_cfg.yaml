@@ -22,13 +22,22 @@ spec:
         - name: MONGO_INITDB_ROOT_PASSWORD
           value: example
         - name: DATABASE_URL
-          value: /usr/users.db
+          value: postgres://user:mysecretpassword@postgres/postgres_db
         - name: TEST_MONGO_ADDRESS
           value: mongo-pod
-        volumeMounts:               # 3
-        - name: sqlite-volume       # 3.a
-          mountPath: /usr        # 3.b
-      volumes:
-      - name: sqlite-volume         # 2
-        persistentVolumeClaim:
-          claimName: sqlite-pvc     # 
+        ports:
+        - containerPort: 3030
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  type: NodePort
+  ports:
+    - nodePort: 31317
+      port: 3030
+      protocol: TCP
+      targetPort: 3030
+  selector:
+    app: myapp
