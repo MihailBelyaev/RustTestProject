@@ -4,7 +4,7 @@ metadata:
   name: mongo
 spec:
   ports:
-  - port: 27015
+  - port: 27017
   selector:
     app: mongo
 ---
@@ -25,7 +25,7 @@ spec:
       - name: mongo
         image: mongo:5.0
         ports:
-        - containerPort: 27015
+        - containerPort: 27017
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
           value: root
