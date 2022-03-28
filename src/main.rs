@@ -1,5 +1,7 @@
 use std::env;
-
+#[macro_use]
+extern crate diesel_migrations;
+use diesel::{Connection, PgConnection};
 use rust_test_project::loginmanager::LoginManager;
 use rust_test_project::mongodbprovider::{self, MongoConnectionParameters, MongoDBProvider};
 use rust_test_project::routes::{
@@ -11,6 +13,7 @@ use warp::Filter;
 
 #[tokio::main]
 async fn main() {
+    embed_migrations!();
     tracing_subscriber::fmt().init();
     info!("Program started");
     let mongo_address: String = mongodbprovider::get_db_address_from_env().unwrap();
@@ -25,6 +28,8 @@ async fn main() {
     .await;
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let _pg_conn = PgConnection::establish(&database_url).unwrap();
+    embedded_migrations::run(&_pg_conn).expect("unable to run migrations");
     let login_manager = LoginManager::new(database_url);
     info!("Creating routes");
     let db_provider_clone = db_provider.clone();

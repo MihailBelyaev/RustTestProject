@@ -1,6 +1,5 @@
 version: '3'
 services:
-
   test-mongo:
     image: "mongo:5.0"
     container_name: my-mongo
@@ -9,11 +8,21 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+  test-postgres:
+    image: "postgres:9.6.5"
+    container_name: postgres-db
+    networks:
+      - backend
+    environment:
+        POSTGRES_DB: postgres_db
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: mysecretpassword
   test-app:
     depends_on:
-      - test_mongo
+      - test-mongo
+      - test-postgres
     environment:
-      - TEST_MONGO_ADDRESS=value
+      - TEST_MONGO_ADDRESS=my-mongo
     build: .
     container_name: test-app
     ports:

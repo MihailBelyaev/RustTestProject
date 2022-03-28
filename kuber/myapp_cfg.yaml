@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp-container
+        image: belyaevmihail/rusttest
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: root
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: example
+        - name: DATABASE_URL
+          value: postgres://user:mysecretpassword@postgres/postgres_db
+        - name: TEST_MONGO_ADDRESS
+          value: mongo
+        ports:
+        - containerPort: 3030
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  type: NodePort
+  ports:
+    - nodePort: 31317
+      port: 3030
+      protocol: TCP
+      targetPort: 3030
+  selector:
+    app: myapp

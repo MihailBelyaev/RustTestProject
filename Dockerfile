@@ -1,6 +1,7 @@
 FROM rust:1.58 as lint
 COPY Cargo.toml Cargo.lock ./app/
 COPY src ./app/src
+COPY migrations ./app/migrations
 WORKDIR /app
 RUN rustup component add rustfmt clippy
 RUN cargo fmt --all
@@ -36,7 +37,7 @@ ENV RUST_LOG=debug
 COPY --from=build /usr/local/cargo/bin/RustTestProject/release/rust_test_project /usr/local/bin/app
 EXPOSE 3030
 
-RUN apt update && apt install sqlite3 -y
+RUN apt update && apt install libpq5 -y
 RUN apt-get install libc6-dev -y && \
     apt-get clean autoclean && \
     apt-get autoremove --yes  && \

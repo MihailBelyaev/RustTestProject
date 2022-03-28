@@ -17,14 +17,14 @@ pub struct User {
     pub token: String,
 }
 impl User {
-    pub fn by_login(login: String, conn: &SqliteConnection) -> Option<Self> {
+    pub fn by_login(login: String, conn: &PgConnection) -> Option<Self> {
         if let Ok(record) = user_dsl.find(login).get_result::<User>(conn) {
             Some(record)
         } else {
             None
         }
     }
-    pub fn by_token(token: String, conn: &SqliteConnection) -> Option<Self> {
+    pub fn by_token(token: String, conn: &PgConnection) -> Option<Self> {
         let dsl_filter = schema::users::dsl::users.filter(schema::users::token.eq(token));
         if let Ok(record) = dsl_filter.first::<User>(conn) {
             Some(record)
@@ -33,16 +33,16 @@ impl User {
         }
     }
 
-    pub fn get_list(conn: &SqliteConnection) -> Result<Vec<User>, diesel::result::Error> {
+    pub fn get_list(conn: &PgConnection) -> Result<Vec<User>, diesel::result::Error> {
         user_dsl.load::<User>(conn) //expect("Error while loading users list")
     }
-    pub fn insert_new_user(conn: &SqliteConnection, new_user: User) -> bool {
+    pub fn insert_new_user(conn: &PgConnection, new_user: User) -> bool {
         let res = diesel::insert_into(user_dsl)
             .values(&new_user)
             .execute(conn);
         res.is_ok()
     }
-    pub fn update_user_password(conn: &SqliteConnection, new_user: User) -> bool {
+    pub fn update_user_password(conn: &PgConnection, new_user: User) -> bool {
         let dsl_filter = schema::users::dsl::users.filter(schema::users::login.eq(new_user.login));
         let res = diesel::update(dsl_filter)
             .set(schema::users::password.eq(new_user.password))
@@ -65,13 +65,13 @@ pub struct History {
 }
 
 impl History {
-    pub fn add_element(conn: &SqliteConnection, element: History) {
+    pub fn add_element(conn: &PgConnection, element: History) {
         let _res = diesel::insert_into(history_dsl)
             .values(&element)
             .execute(conn);
     }
     pub fn get_by_login(
-        conn: &SqliteConnection,
+        conn: &PgConnection,
         user_name: String,
     ) -> Result<Vec<History>, diesel::result::Error> {
         let dsl_filter = schema::history::dsl::history.filter(schema::history::login.eq(user_name));

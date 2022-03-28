@@ -17,7 +17,7 @@ tracing-subscriber = { version = "0.3", features = ["tracing-log", "env-filter"]
 async-trait = "0.1.52"
 anyhow = "1.0.53"
 tracing = "0.1.31"
-diesel = { version = "1.4.8", features =["sqlite","r2d2","chrono"]}
+diesel = { version = "1.4.8", features =["postgres","r2d2","chrono"]}
 diesel_migrations = "1.4.0"
 dotenv = "0.15.0"
 uuid = "0.8.2"
